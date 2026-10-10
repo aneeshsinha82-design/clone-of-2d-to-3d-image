@@ -118,10 +118,36 @@ function buildLines(ctx, ph, sc, set, layout, o) {
     lines = layout === 'keyword' ? [lead, key, tail] : [key, lead.concat(tail)];
     lines = lines.filter(l => l.length);
   }
-  // fit every line inside the frame
+  // Keep text inside the vertical-video safe area. Wrap multi-word lines before
+  // scaling so long phrases never extend beyond the canvas edges.
+  const maxLineWidth = 820;
+  const fittedLines = [];
   lines.forEach(line => {
-    const gap = line[0].size * 0.28, total = line.reduce((a, x) => a + x.width, 0) + gap * (line.length - 1);
-    if (total > 940) { const f = 940 / total; line.forEach(x => { x.size *= f; x.width *= f; }); }
+    if (!line.length) return;
+    let chunk = [];
+    const widthOf = items => {
+      const gap = items[0].size * 0.28;
+      return items.reduce((sum, item) => sum + item.width, 0) + gap * (items.length - 1);
+    };
+    line.forEach(item => {
+      const candidate = [...chunk, item];
+      if (chunk.length && widthOf(candidate) > maxLineWidth) {
+        fittedLines.push(chunk);
+        chunk = [item];
+      } else {
+        chunk = candidate;
+      }
+    });
+    if (chunk.length) fittedLines.push(chunk);
+  });
+  lines = fittedLines;
+  lines.forEach(line => {
+    const gap = line[0].size * 0.28;
+    const total = line.reduce((a, x) => a + x.width, 0) + gap * (line.length - 1);
+    if (total > maxLineWidth) {
+      const f = maxLineWidth / total;
+      line.forEach(x => { x.size *= f; x.width *= f; });
+    }
     line.forEach(x => { x.isKey = (kPos >= 0 && x.st === set.emph) || !!x.st.isBig; });
   });
   return { lines, stack: kPos < 0 && layout !== 'ladder', ladder: layout === 'ladder' };
