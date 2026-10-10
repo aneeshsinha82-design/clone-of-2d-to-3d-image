@@ -9,16 +9,23 @@ import { drawPaper, drawEndCardOverlay, renderShowcase } from './wrapper.js';
 
 export { W, H, TEXT_ANIMS, ENTRANCES, TRANSITIONS, LAYOUTS, CAMERAS, EXITS };
 
-function drawWatermark(ctx, th, handle) {
+function drawWatermark(ctx, th, handle, handleIcon = 'youtube') {
   if (!handle) return;
   ctx.save();
   ctx.globalAlpha = 0.9; ctx.fillStyle = th.wm; ctx.strokeStyle = th.wm; ctx.lineWidth = 3;
   ctx.font = '500 26px Inter, Arial, sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
   ctx.fillText(handle.toUpperCase(), W - 50, 150);
   const x = W - 74, y = 100;
-  ctx.beginPath(); ctx.roundRect(x - 18, y - 18, 36, 36, 10); ctx.stroke();
-  ctx.beginPath(); ctx.arc(x, y, 8, 0, 7); ctx.stroke();
-  ctx.beginPath(); ctx.arc(x + 11, y - 11, 2, 0, 7); ctx.fill();
+  if (handleIcon === 'youtube') {
+    ctx.fillStyle = '#FF0033';
+    ctx.beginPath(); ctx.roundRect(x - 20, y - 14, 40, 28, 8); ctx.fill();
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath(); ctx.moveTo(x - 4, y - 7); ctx.lineTo(x + 8, y); ctx.lineTo(x - 4, y + 7); ctx.closePath(); ctx.fill();
+  } else if (handleIcon === 'instagram') {
+    ctx.beginPath(); ctx.roundRect(x - 18, y - 18, 36, 36, 10); ctx.stroke();
+    ctx.beginPath(); ctx.arc(x, y, 8, 0, 7); ctx.stroke();
+    ctx.beginPath(); ctx.arc(x + 11, y - 11, 2, 0, 7); ctx.fill();
+  }
   ctx.restore();
 }
 function drawOutro(ctx, th, a, handle) {
@@ -87,7 +94,7 @@ function drawScene(ctx, t, S, tl, o) {
     drawButton(ctx, th, sc.button, hasImg || hasIcons ? 1700 : 1250, t - start);
   }
   ctx.restore();
-  drawWatermark(ctx, th, o.handle);
+  drawWatermark(ctx, th, o.handle, o.handleIcon);
 
   if (sc && tkind !== 'none') drawTransition(ctx, th, sc, t, tkind, si);
 }
