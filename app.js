@@ -87,7 +87,7 @@ function applyAspect() {
 }
 
 /* ---------- quick style preset ---------- */
-const PRESETS = {
+const PRESETS = {\n  archive: { theme: 'paper', trans: 'pageTurn', camera: 'mix', camexit: 'mix', cameraSpeed: 72, layout: 'ladder', textanim: 'mix', textexit: 'none',\n    fontset: 'editorial', picstyle: 'polaroid', picpos: 'center', deco: 'archive', backdrop: 'none', entrance: 'mix' },
   miracle: { theme: 'alternate', trans: 'none', camera: 'mix', camexit: 'mix', layout: 'ladder', textanim: 'mix', textexit: 'none',
     fontset: 'agency', picstyle: 'cutout', backdrop: 'circle', deco: 'min', entrance: 'mix' }
 };
