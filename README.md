@@ -25,7 +25,7 @@ Icons: gear, user, headset, chat, star, check, bolt, heart, clock, 24/7, hand, m
 
 ## Reference-video style (camera moves, hard cuts, ladder text)
 Pick **Quick style preset → Reference video** to switch everything on at once, or choose the parts separately. The curves were measured frame by frame from a reference video.
-- **Camera movement (100 presets)**: 25 motion families × 4 strengths (Subtle, Classic, Cinematic, Bold), including dolly in/out, pan, tilt, truck, pedestal, diagonal pushes/pulls, orbit, arc, roll, handheld, gentle float, dolly zoom, and snap zoom. Presets are grouped in the camera dropdown; Mix cycles through the catalogue. The removed “Slide in + constant drift” camera option is not included.
+- **Camera movement** (moves the whole scene): rise & settle from below · zoom-up settle (75 % → 100 %) · slide in from the right · cinematic push-in / pull-out · pan left / right · subtle handheld · orbit
 - **Scene exit motion** (last fraction of a second): whip up and out · slide out to the right · zoom hugely into the cut
 - **Transition: None (hard cut)** is the reference look: the motion above does the work
 - **Text layout "Ladder":** small lead-in words, then bigger words · **Text animations:** rise from behind a mask line (grey → full colour), fade + focus pull
@@ -57,7 +57,7 @@ MP4 uses Mediabunny with browser WebCodecs (H.264 video + AAC audio); the browse
 - `themes.js` – colour themes and font sets
 - `text.js` – text layouts, 13 animations, exit animations
 - `pictures.js` – picture entrances and picture styles
-- `camera.js` – 100 selectable camera-animation presets and scene-exit motion (pure maths, tested)
+- `camera.js` – camera movements and scene-exit motion (pure maths, tested)
 - `fx.js` – scene transitions, decorations, ghost symbol, giant words, ink splash, backdrops
 - `icons.js` – icon badges, orbit ring, button with cursor
 - `wrapper.js` – paper texture, showcase wrapper, end card
@@ -71,6 +71,5 @@ MP4 uses Mediabunny with browser WebCodecs (H.264 video + AAC audio); the browse
 A curated guide of **100 public GitHub repositories** for studying camera movement, kinetic typography, text effects, transitions, Canvas/WebGL rendering, and motion design:
 
 - [Open-source motion learning guide — 100 repositories](./OPEN_SOURCE_MOTION_LEARNING_GUIDE.md)
-- [Camera animation presets — 100 styles](./CAMERA_ANIMATION_PRESETS.md)
 
 These are reference links. Check each project's license before reusing code or assets. The original `2d-image-to-3d` repository is not modified by this project.
