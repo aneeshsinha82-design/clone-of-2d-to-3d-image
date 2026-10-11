@@ -227,48 +227,33 @@ export function drawTimelineOverlay(ctx, t, S, dateText) {
   ctx.globalAlpha = 1; ctx.filter = 'none';
   const panelY = H * .70, panelH = H * .27;
   const p = easeOutCubic(Math.max(0, Math.min(1, t / Math.max(.1, o.duration))));
-  // Restore the single original L-bend style, with the reference-video motion sequence.
-  const lineY = panelY + panelH * .68;
-  const topY = panelY + panelH * .12;
-  const leftX = W * .07, nodeX = W * .38, imageX = W * .75;
-  const imageSize = Math.min(o.imageSize, panelH * .62);
-  const imageRadius = ev.image ? imageSize / 2 : 0;
-  const armEnd = imageX - imageRadius * .72;
-  const phase = (start,end) => easeOutCubic(Math.max(0,Math.min(1,(t-start)/(end-start))));
-  drawGlowLine(ctx,leftX,lineY,nodeX,lineY,o,phase(0,.48));
-  drawGlowLine(ctx,nodeX,lineY,nodeX,topY,o,phase(.42,.78));
-  drawGlowLine(ctx,nodeX,topY,armEnd,topY,o,phase(.72,1.12));
-  const nodeP=phase(.36,.62);
-  ctx.save(); ctx.globalAlpha=nodeP; ctx.shadowColor=o.glow;
-  ctx.shadowBlur=o.glowOn?o.glowStrength:0; ctx.strokeStyle=o.marker;
-  ctx.lineWidth=Math.max(3,o.lineWidth); ctx.beginPath();
-  ctx.arc(nodeX,lineY,Math.max(9,o.lineWidth*2.4),0,Math.PI*2); ctx.stroke(); ctx.restore();
-  const yearP=phase(.55,.82);
-  ctx.save(); ctx.globalAlpha=yearP; ctx.fillStyle=o.yearText;
-  ctx.textAlign='left'; ctx.textBaseline='middle';
-  ctx.shadowColor=o.glow; ctx.shadowBlur=o.glowOn?6:0;
-  ctx.font='700 '+Math.min(o.fontSize,48)+'px '+JSON.stringify(o.font)+', Arial, sans-serif';
-  ctx.fillText(ev.date||dateText,nodeX+W*.05,lineY,W*.24); ctx.restore();
-  const imageP=phase(.98,1.42);
-  if (ev.image && imageP>0) drawCircularImage(ctx,ev.image,imageX,topY,imageSize*imageP,imageP,o.marker);
-  else { ctx.save(); ctx.globalAlpha=imageP; ctx.strokeStyle=o.marker; ctx.lineWidth=3;
-    ctx.beginPath(); ctx.arc(imageX,topY,Math.max(14,imageSize*.42),Math.PI*1.5,Math.PI*1.5+Math.PI*2*imageP); ctx.stroke(); ctx.restore(); }
-  // Keep event title/details available without displacing the reference year/photo layout.
-  if (ev.title || ev.description) {
-    ctx.save();
-    ctx.globalAlpha = p;
-    ctx.fillStyle = o.text; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-    ctx.shadowColor = o.glow; ctx.shadowBlur = o.glowOn ? 4 : 0;
-    ctx.font = '600 ' + Math.max(14, Math.min(o.fontSize * .42, 24)) + 'px ' + JSON.stringify(o.font) + ', Arial, sans-serif';
-    const detailY = lineY + Math.min(24, panelH * .12);
-    if (ev.title) ctx.fillText(ev.title, W * .60, detailY, W * .72);
-    if (ev.description) {
-      ctx.shadowBlur = 0;
-      ctx.font = '400 16px ' + JSON.stringify(o.font) + ', Arial, sans-serif';
-      ctx.fillText(ev.description, W * .60, detailY + 26, W * .72);
-    }
-    ctx.restore();
+  // Keep the overlay floating over the scene: no filled panel or black box.
+  // A light text shadow and the timeline line provide contrast without hiding the video.
+  const x1 = W * .13, x2 = W * .87, y = panelY + panelH * .37;
+  drawGlowLine(ctx, x1, y, x1 + (x2 - x1) * p, y, o, p);
+  // Show the uploaded event image in the inline overlay as part of the timeline,
+  // rather than only showing it in the separate full-screen timeline renderer.
+  if (ev.image && p > 0) {
+    const imageSize = Math.min(o.imageSize, panelH * 0.56);
+    const imageX = W / 2;
+    const imageY = y;
+    drawCircularImage(ctx, ev.image, imageX, imageY, imageSize * p, p, o.marker);
   }
+  ctx.save();
+  ctx.globalAlpha = p;
+  ctx.fillStyle = o.yearText;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.shadowColor = o.glow; ctx.shadowBlur = o.glowOn ? 6 : 0;
+  ctx.font = '700 ' + Math.min(o.fontSize, 48) + 'px ' + JSON.stringify(o.font) + ', Arial, sans-serif';
+  ctx.fillText(ev.date || dateText, W / 2, panelY + panelH * .18, W * .78);
+  ctx.shadowBlur = 0;
+  ctx.font = '600 ' + Math.max(18, Math.min(o.fontSize * .52, 28)) + 'px ' + JSON.stringify(o.font) + ', Arial, sans-serif';
+  ctx.fillText(ev.title || '', W / 2, panelY + panelH * .60, W * .78);
+  if (ev.description) {
+    ctx.font = '400 18px ' + JSON.stringify(o.font) + ', Arial, sans-serif';
+    ctx.fillText(ev.description, W / 2, panelY + panelH * .79, W * .78);
+  }
+  ctx.restore();
   ctx.restore();
   return true;
 }
