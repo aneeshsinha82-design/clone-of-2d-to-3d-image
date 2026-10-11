@@ -123,6 +123,26 @@ $('aud').onchange = async e => {
 };
 
 /* ---------- timeline ---------- */
+function enforceTimelineDurations(tl) {
+  if (!tl?.scenes?.length || !timelineEnabled()) return;
+  const wanted = timelineDuration();
+  tl.scenes.forEach((scene, index) => {
+    if (!scene.timeline) return;
+    const delta = wanted - (scene.end - scene.start);
+    scene.end = scene.start + wanted;
+    if (scene.words[0]) scene.words[0].dur = wanted;
+    scene.phrases.forEach(p => { p.start = scene.start; p.end = scene.end; });
+    if (Math.abs(delta) < 0.001) return;
+    tl.scenes.slice(index + 1).forEach(next => {
+      next.start += delta; next.end += delta;
+      next.words.forEach(w => { w.t += delta; });
+      next.phrases.forEach(p => { p.start += delta; p.end += delta; });
+    });
+    tl.events.forEach(e => { if (e.scene > index) e.t += delta; });
+    tl.total += delta;
+    if (tl.outroStart !== undefined) tl.outroStart += delta;
+  });
+}
 function refresh() {
   $('wpmv').textContent = $('wpm').value + ' wpm';
   $('cameraSpeedValue').textContent = (+$('cameraSpeed').value / 100).toFixed(1) + '×';
@@ -133,9 +153,9 @@ function refresh() {
   state.tl = buildTimeline(parseScript($('script').value), state.images, { ...bo, audioDur: smart ? 0 : aDur, timelineDuration: timelineEnabled() ? timelineDuration() : 4 });
   if (smart) {
     const ok = applyVoiceSync(state.tl, state.voice, { offset: +$('syncoff').value / 1000, marks: state.marks, audioDur: aDur });
-    if (!ok) state.tl = buildTimeline(parseScript($('script').value), state.images, { ...bo, audioDur: aDur });
+    if (!ok) state.tl = buildTimeline(parseScript($('script').value), state.images, { ...bo, audioDur: aDur, timelineDuration: timelineEnabled() ? timelineDuration() : 4 });
   }
-  
+  enforceTimelineDurations(state.tl);
   curT = Math.min(curT, state.tl.total);
   const tl = $('tl'); tl.innerHTML = '';
   state.tl.scenes.forEach((sc, i) => {
