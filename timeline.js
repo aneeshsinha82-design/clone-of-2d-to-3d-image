@@ -126,9 +126,9 @@ export function initTimeline() {
   // Dates are refreshed from the complete script, not only when a new year is added.
   const extractScriptEvents = () => {
     const script = $('script')?.value || '';
-    const datePattern = /(?<!\\d)(\\d{1,4}\\s*(?:BCE|B\.C\.?|BC|CE|C\.E\.?|AD|A\.D\.?))(?![\\p{L}])/giu;
-    const yearPattern = /(?<![\\d/])(\\d{3,4})(?![\\d/])/g;
-    const chunks = script.split(/(?<=[.!?])\\s+|\\n+/).map(s => s.trim()).filter(Boolean);
+    const datePattern = /(?<!\d)(\d{1,4}\s*(?:BCE|B\.C\.?|BC|CE|C\.E\.?|AD|A\.D\.?))(?![\p{L}])/giu;
+    const yearPattern = /(?<![\d/])(\d{3,4})(?![\d/])/g;
+    const chunks = script.split(/(?<=[.!?])\s+|\n+/).map(s => s.trim()).filter(Boolean);
     const found = [];
     const seen = new Set();
     for (const chunk of chunks) {
@@ -143,11 +143,11 @@ export function initTimeline() {
       }
       matches.sort((x, y) => x.index - y.index);
       for (const match of matches) {
-        const rawDate = match.raw.replace(/\\s+/g, ' ').replace(/\\.$/, '').trim();
+        const rawDate = match.raw.replace(/\s+/g, ' ').replace(/\.$/, '').trim();
         const title = chunk
           .slice(0, match.index) + chunk.slice(match.index + match.raw.length);
-        const cleanTitle = title.replace(/\\{[^}]*\\}/g, '').replace(/[\\[\\]*]/g, '')
-          .replace(/\\s+/g, ' ').replace(/^[\\s,;:—–-]+|[\\s,;:—–-]+$/g, '').trim();
+        const cleanTitle = title.replace(/\{[^}]*\}/g, '').replace(/[\[\]*]/g, '')
+          .replace(/\s+/g, ' ').replace(/^[\s,;:—–-]+|[\s,;:—–-]+$/g, '').trim();
         const key = rawDate.toUpperCase() + '|' + cleanTitle.toLowerCase();
         if (seen.has(key)) continue;
         seen.add(key);
@@ -160,7 +160,7 @@ export function initTimeline() {
   const importScriptEvents = (automatic = false) => {
     const script = $('script')?.value || '';
     const extracted = extractScriptEvents();
-    const hasMarker = /^\\s*\\{timeline\\}\\s*$/im.test(script);
+    const hasMarker = /^\s*\{timeline\}\s*$/im.test(script);
     const signature = extracted.map(ev => ev.date.toUpperCase() + ':' + ev.title.toLowerCase()).join('|');
     if (!extracted.length) {
       if (lastAutoSignature) {
