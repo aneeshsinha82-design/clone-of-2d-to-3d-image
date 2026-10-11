@@ -122,46 +122,68 @@ export function initTimeline() {
       window.dispatchEvent(new Event('timelinechange'));
     }
   });
-  // Extract date/year mentions together with the sentence that explains each event.
-  // Import automatically when the script's sequence of dates changes; keep manual event edits
-  // intact while the user changes unrelated wording.
+  // Detect explicit years/dates from the script and derive readable event labels.
+  // Dates are refreshed from the complete script, not only when a new year is added.
   const extractScriptEvents = () => {
     const script = $('script')?.value || '';
-    const datePattern = /(?<!\d)(\d{1,4}\s*(?:BCE|BC|CE|AD)|(?:1[0-9]{3}|20[0-9]{2}|21[0-9]{2}))(?!\d)/gi;
+    const datePattern = /(?<!\\d)(\\d{1,4}\\s*(?:BCE|B\.C\.?|BC|CE|C\.E\.?|AD|A\.D\.?))(?![\\p{L}])/giu;
+    const yearPattern = /(?<![\\d/])(\\d{3,4})(?![\\d/])/g;
+    const chunks = script.split(/(?<=[.!?])\\s+|\\n+/).map(s => s.trim()).filter(Boolean);
     const found = [];
     const seen = new Set();
-    const chunks = script.split(/(?<=[.!?])\s+|\n+/).map(s => s.trim()).filter(Boolean);
     for (const chunk of chunks) {
-      for (const match of chunk.matchAll(datePattern)) {
-        const rawDate = match[0].replace(/\s+/g, ' ').trim();
-        const key = rawDate.toUpperCase();
+      const matches = [];
+      for (const match of chunk.matchAll(datePattern)) matches.push({ raw: match[0], index: match.index, explicitEra: true });
+      for (const match of chunk.matchAll(yearPattern)) {
+        const year = Number(match[1]);
+        if (year < 100 || year > 2999) continue;
+        // Do not treat numbers that already belong to an era-qualified date as separate years.
+        if (matches.some(m => match.index >= m.index && match.index < m.index + m.raw.length)) continue;
+        matches.push({ raw: match[1], index: match.index, explicitEra: false });
+      }
+      matches.sort((x, y) => x.index - y.index);
+      for (const match of matches) {
+        const rawDate = match.raw.replace(/\\s+/g, ' ').replace(/\\.$/, '').trim();
+        const title = chunk
+          .slice(0, match.index) + chunk.slice(match.index + match.raw.length);
+        const cleanTitle = title.replace(/\\{[^}]*\\}/g, '').replace(/[\\[\\]*]/g, '')
+          .replace(/\\s+/g, ' ').replace(/^[\\s,;:—–-]+|[\\s,;:—–-]+$/g, '').trim();
+        const key = rawDate.toUpperCase() + '|' + cleanTitle.toLowerCase();
         if (seen.has(key)) continue;
         seen.add(key);
-        const title = chunk
-          .replace(match[0], '')
-          .replace(/[{}\[\]*]/g, '')
-          .replace(/\s+/g, ' ')
-          .replace(/^[\s,;:—–-]+|[\s,;:—–-]+$/g, '')
-          .trim();
-        found.push({ date: rawDate, title: title || 'Event ' + (found.length + 1) });
+        found.push({ date: rawDate, title: cleanTitle || 'Event ' + (found.length + 1) });
       }
     }
     return found;
   };
-  let lastAutoDateSignature = '';
+  let lastAutoSignature = '';
   const importScriptEvents = (automatic = false) => {
+    const script = $('script')?.value || '';
     const extracted = extractScriptEvents();
+    const hasMarker = /^\\s*\\{timeline\\}\\s*$/im.test(script);
+    const signature = extracted.map(ev => ev.date.toUpperCase() + ':' + ev.title.toLowerCase()).join('|');
     if (!extracted.length) {
-      if (!automatic) $('timelineReferencePreview').textContent = 'No years or dates found in the script. Add years such as 1998 or 3000 BCE.';
+      if (lastAutoSignature) {
+        events.forEach(ev => ev.imageUrl && URL.revokeObjectURL(ev.imageUrl));
+        events.splice(0, events.length, makeEvent());
+        lastAutoSignature = '';
+        renderEntries();
+        window.dispatchEvent(new Event('timelinechange'));
+      }
+      if (!automatic) $('timelineReferencePreview').textContent = 'No years found. Add a numeric year such as 1760 or 2026, then put {timeline} on its own line where the timeline should appear.';
       return;
     }
-    const signature = extracted.map(ev => ev.date.toUpperCase()).join('|');
-    if (automatic && signature === lastAutoDateSignature) return;
-    lastAutoDateSignature = signature;
+    if (automatic && signature === lastAutoSignature) return;
+    lastAutoSignature = signature;
     events.forEach(ev => ev.imageUrl && URL.revokeObjectURL(ev.imageUrl));
     events.splice(0, events.length, ...extracted.map(ev => makeEvent(ev)));
-    renderEntries(); window.dispatchEvent(new Event('timelinechange'));
-    $('timelineReferencePreview').textContent = 'Detected ' + extracted.length + ' date/year event(s) from the script. Event titles were taken from the surrounding sentence; review or edit them below.';
+    // When a marker and dates are present, enable the feature so it works without a second setup step.
+    if (hasMarker && $('timelineEnabled')) $('timelineEnabled').checked = true;
+    renderEntries();
+    window.dispatchEvent(new Event('timelinechange'));
+    $('timelineReferencePreview').textContent = hasMarker
+      ? 'Detected ' + extracted.length + ' timeline event(s) from your script. The timeline marker is present and rendering is enabled.'
+      : 'Detected ' + extracted.length + ' year/event(s). Add {timeline} on its own line to place the timeline in the video.';
   };
   $('timelineImportScript')?.addEventListener('click', () => importScriptEvents(false));
   $('script')?.addEventListener('input', () => importScriptEvents(true));
