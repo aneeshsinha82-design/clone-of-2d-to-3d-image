@@ -35,11 +35,30 @@ const draw = (t, S) => {
   if (!timelineEnabled() || !state.tl?.scenes?.length) return;
   const scene = state.tl.scenes.find(sc => !sc.timeline && t >= sc.start && t < sc.end);
   if (!scene) return;
-  const dateWord = scene.words.find(w => /(?:\d{3,4}\s*(?:BCE|BC|CE|AD)?)/i.test(w.text));
-  if (!dateWord) return;
+  const dateWordIndex = scene.words.findIndex(w => /(?:\d{3,4}\s*(?:BCE|BC|CE|AD)?)/i.test(w.text));
+  if (dateWordIndex < 0) return;
+  const dateWord = scene.words[dateWordIndex];
   const dateMatch = dateWord.text.match(/\d{3,4}\s*(?:BCE|BC|CE|AD)?/i);
   if (!dateMatch) return;
-  drawTimelineOverlay(ctx, Math.max(0, t - dateWord.t), S, dateMatch[0]);
+
+  // Pair the date with the image matched to the same sentence. Prefer an image
+  // attached to the date word, then the nearest image word in that sentence,
+  // and only then the nearest image event in the script.
+  const sceneIndex = state.tl.scenes.indexOf(scene);
+  const sceneEvents = state.tl.events.filter(e => e.scene === sceneIndex);
+  let imageEvent = sceneEvents.find(e => e.wi === dateWordIndex);
+  if (!imageEvent && sceneEvents.length) {
+    imageEvent = sceneEvents.reduce((best, e) =>
+      Math.abs(e.wi - dateWordIndex) < Math.abs(best.wi - dateWordIndex) ? e : best
+    );
+  }
+  if (!imageEvent && state.tl.events.length) {
+    imageEvent = state.tl.events.reduce((best, e) =>
+      Math.abs(e.t - dateWord.t) < Math.abs(best.t - dateWord.t) ? e : best
+    );
+  }
+  const relatedImage = imageEvent?.img?.el || null;
+  drawTimelineOverlay(ctx, Math.max(0, t - dateWord.t), S, dateMatch[0], relatedImage);
 };
 // when paused at the very start, show a "poster" frame (first picture + first words) instead of a blank screen
 const shownT = () => {
