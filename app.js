@@ -1,6 +1,6 @@
 import { parseScript, buildTimeline } from './engine.js';
 import { analyzeVoice, applyVoiceSync } from './sync.js';
-import { renderFrame, W } from './draw.js';
+import { renderFrame, W, H } from './draw.js';
 
 const $ = id => document.getElementById(id);
 const cv = $('cv'), ctx = cv.getContext('2d');
@@ -216,46 +216,131 @@ $('seek').oninput = e => {
   if (was) play();
 };
 
-/* ---------- HD export ---------- */
-$('export').onclick = async () => {
-  if (exporting || !state.tl.total) return;
-  pause(); exporting = true; $('export').disabled = true;
-  await Promise.all(['800 40px Inter', '300 40px Inter', '500 40px Inter', 'italic 500 40px "Playfair Display"', '500 40px "Playfair Display"', '400 40px Anton', '700 40px "Dancing Script"', '700 40px Caveat', '400 40px "Space Mono"', '700 40px "Space Mono"'].map(f => document.fonts.load(f).catch(() => { })));
-  const outW = +$('res').value, outH = Math.round(outW * 16 / 9 / 2) * 2, fps = +$('fps').value, S = outW / W;
-  cv.width = outW; cv.height = outH;
-  const stream = cv.captureStream(fps);
-  let actx = null;
-  if (state.audioBuf || $('sfx').checked) {
-    actx = new AudioContext(); await actx.resume();
-    const dest = actx.createMediaStreamDestination(), at = actx.currentTime + 0.1;
-    srcNode = startVoice(actx, dest, 0, at);
-    sfxNodes = startSfx(actx, dest, 0, at);
-    dest.stream.getAudioTracks().forEach(tr => stream.addTrack(tr));
+/* ---------- MP4 / WebM export via Mediabunny ---------- */
+async function renderAudioForExport(total) {
+  const withSfx = $('sfx').checked && state.tl;
+  if (!state.audioBuf && !withSfx) return null;
+  const OfflineCtx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  if (!OfflineCtx) throw new Error('Offline audio rendering is unavailable in this browser.');
+  const sampleRate = state.audioBuf?.sampleRate || 48000;
+  const frameCount = Math.max(1, Math.ceil(total * sampleRate));
+  const offline = new OfflineCtx(2, frameCount, sampleRate);
+  if (state.audioBuf) {
+    const voice = offline.createBufferSource();
+    voice.buffer = state.audioBuf;
+    voice.connect(offline.destination);
+    voice.start(0);
   }
-  const mime = ['video/mp4;codecs=avc1.640028,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'].find(m => MediaRecorder.isTypeSupported(m));
-  const bps = outW >= 1440 ? 32e6 : outW >= 1080 ? 20e6 : 10e6;
-  const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: bps, audioBitsPerSecond: 192000 });
-  const chunks = []; rec.ondataavailable = e => e.data.size && chunks.push(e.data);
-  const done = new Promise(r => rec.onstop = r);
-  rec.start(500);
-  const start = performance.now() + 100, total = state.tl.total;
-  await new Promise(res => {
-    const loop = () => {
-      const t = Math.max(0, Math.min((performance.now() - start) / 1000, total));
+  if (withSfx) {
+    const times = [...state.tl.events.map(e => e.t), ...state.tl.scenes.slice(1).map(s => s.start)];
+    times.filter(t => t >= 0 && t < total).forEach(t => whoosh(offline, offline.destination, Math.max(0, t - 0.05), 0.35));
+  }
+  return offline.startRendering();
+}
+
+$('export').onclick = async () => {
+  if (exporting || !state.tl?.total) return;
+  pause();
+  exporting = true;
+  $('export').disabled = true;
+  let output = null, videoSource = null, audioSource = null;
+  const originalAspect = $('aspect').value;
+  try {
+    await Promise.all([
+      '800 40px Inter', '300 40px Inter', '500 40px Inter',
+      'italic 500 40px "Playfair Display"', '500 40px "Playfair Display"',
+      '400 40px Anton', '700 40px "Dancing Script"', '700 40px Caveat',
+      '400 40px "Space Mono"', '700 40px "Space Mono"'
+    ].map(f => document.fonts.load(f).catch(() => {})));
+
+    $('expstat').textContent = 'Loading browser video encoder…';
+    const {
+      Output, Mp4OutputFormat, WebMOutputFormat, BufferTarget,
+      CanvasSource, AudioBufferSource, Quality
+    } = await import('https://esm.sh/mediabunny@1.61.3');
+
+    const aspect = $('aspect').value;
+    const edge = Number($('res').value);
+    const fps = Number($('fps').value);
+    let outW = edge, outH = Math.round(edge * 16 / 9);
+    if (aspect === 'landscape') { outW = Math.round(edge * 16 / 9); outH = edge; }
+    else if (aspect === 'square') { outW = edge; outH = edge; }
+
+    setCanvasDimensions(aspect);
+    cv.width = outW;
+    cv.height = outH;
+    const S = outW / W;
+    const format = $('format').value;
+    const isMp4 = format === 'mp4';
+    const bitrate = edge >= 1440 ? 32e6 : edge >= 1080 ? 20e6 : 10e6;
+    const audioBuffer = await renderAudioForExport(state.tl.total);
+    const target = new BufferTarget();
+    output = new Output({
+      format: isMp4 ? new Mp4OutputFormat() : new WebMOutputFormat(),
+      target
+    });
+    videoSource = new CanvasSource(cv, {
+      codec: isMp4 ? 'avc' : 'vp9',
+      quality: new Quality({ bitrate })
+    });
+    output.addVideoTrack(videoSource, { frameRate: fps });
+
+    if (audioBuffer) {
+      audioSource = new AudioBufferSource({
+        codec: isMp4 ? 'aac' : 'opus',
+        quality: new Quality({ bitrate: 192000 })
+      });
+      output.addAudioTrack(audioSource);
+    }
+
+    await output.start();
+    if (audioSource && audioBuffer) {
+      $('expstat').textContent = 'Encoding audio…';
+      await audioSource.add(audioBuffer);
+      audioSource.close();
+    }
+
+    const total = state.tl.total;
+    const frameCount = Math.ceil(total * fps);
+    const frameDuration = 1 / fps;
+    for (let i = 0; i < frameCount; i++) {
+      const t = i / fps;
       draw(t, S);
-      $('expstat').textContent = `Rendering ${Math.round(t / total * 100)}% — keep this tab open and visible…`;
-      if (t >= total) { setTimeout(res, 250); return; }
-      requestAnimationFrame(loop);
-    };
-    loop();
-  });
-  rec.stop(); await done; stopAudio(); actx && actx.close();
-  const ext = mime.startsWith('video/mp4') ? 'mp4' : 'webm';
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob(chunks, { type: mime.split(';')[0] }));
-  a.download = `script-video-${outW}p.${ext}`; a.click();
-  $('expstat').textContent = `Done — saved as ${a.download}` + (ext === 'webm' ? ' (this browser records WebM; use Chrome or Edge for MP4)' : '');
-  cv.width = 540; cv.height = 960; exporting = false; $('export').disabled = false; refresh();
+      await videoSource.add(t, Math.min(frameDuration, total - t));
+      if (i % Math.max(1, Math.floor(fps / 2)) === 0 || i === frameCount - 1) {
+        $('expstat').textContent = `Rendering ${Math.min(99, Math.round((i + 1) / frameCount * 100))}% · ${outW}×${outH} · ${fps} FPS`;
+        await new Promise(resolve => requestAnimationFrame(resolve));
+      }
+    }
+    videoSource.close();
+    await output.finalize();
+    const buffer = target.buffer;
+    if (!buffer) throw new Error('The encoder did not produce an output file.');
+    const mime = isMp4 ? 'video/mp4' : 'video/webm';
+    const ext = isMp4 ? 'mp4' : 'webm';
+    const a = document.createElement('a');
+    const url = URL.createObjectURL(new Blob([buffer], { type: mime }));
+    a.href = url;
+    a.download = `script-video-${outW}x${outH}-${fps}fps.${ext}`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+    $('expstat').textContent = `Done — saved ${a.download}${audioBuffer ? ' with audio' : ' without an audio track'}.`;
+  } catch (error) {
+    try { if (output && typeof output.cancel === 'function') await output.cancel(); } catch {}
+    console.error('Video export failed:', error);
+    $('expstat').textContent = `Export failed: ${error?.message || error}. Try a supported browser/codec or lower the resolution.`;
+  } finally {
+    try { videoSource?.close(); } catch {}
+    try { audioSource?.close(); } catch {}
+    setCanvasDimensions(originalAspect);
+    cv.width = Math.round(W / 2);
+    cv.height = Math.round(H / 2);
+    exporting = false;
+    $('export').disabled = false;
+    $('export').textContent = $('format').value === 'mp4' ? '⬇ Export MP4' : '⬇ Export WebM';
+    refresh();
+  }
 };
 
+applyAspect();
 document.fonts.ready.then(refresh); refresh();
