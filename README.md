@@ -71,5 +71,6 @@ MP4 uses Mediabunny with browser WebCodecs (H.264 video + AAC audio); the browse
 A curated guide of **100 public GitHub repositories** for studying camera movement, kinetic typography, text effects, transitions, Canvas/WebGL rendering, and motion design:
 
 - [Open-source motion learning guide — 100 repositories](./OPEN_SOURCE_MOTION_LEARNING_GUIDE.md)
+- [Camera animation presets — 100 styles](./CAMERA_ANIMATION_PRESETS.md)
 
 These are reference links. Check each project's license before reusing code or assets. The original `2d-image-to-3d` repository is not modified by this project.
