@@ -1,4 +1,4 @@
-import { cameraState, CAMERAS } from './camera.js';
+import { cameraState, CAMERAS, CAMERA_PRESETS } from './camera.js';
 import { analyzeVoice, applyVoiceSync } from './sync.js';
 import {parseScript,buildTimeline} from './engine.js';
 import { W, H, setCanvasDimensions } from './util.js';
@@ -59,7 +59,14 @@ assert.equal(tl5.scenes[0].ghost,'?'); assert.equal(tl5.scenes[2].button,'Book N
   near(cameraState('riseup', 'none', 0.4, 9).dy / 3, 106, 6, 'rise at 0.4s');
   near(cameraState('riseup', 'none', 0.8, 9).dy / 3, 34, 5, 'rise at 0.8s');
   near(cameraState('slidein', 'none', 0.3, 9).dx / 3.008, 36, 6, 'slide in at 0.3s');
-  assert(!CAMERAS.includes('drift'), 'removed drift option stays out of camera mix');
+  assert.equal(CAMERA_PRESETS.length, 100, 'exactly 100 selectable camera presets');
+  assert.equal(CAMERAS.length, 100, 'camera mix uses the 100-preset catalogue');
+  assert(!CAMERAS.some(id => /drift/i.test(id)), 'constant drift camera option stays removed');
+  assert(!CAMERA_PRESETS.some(p => /constant drift/i.test(p.label)), 'constant drift label stays absent');
+  assert(cameraState('dolly-in-cinematic', 'none', 1.5, 9).s > 1, 'new dolly-in preset zooms in');
+  assert(cameraState('pan-left-bold', 'none', 1.5, 9).dx < 0, 'new pan-left preset moves left');
+  assert(cameraState('roll-clockwise-classic', 'none', 1.5, 9).rot > 0, 'new clockwise roll rotates clockwise');
+  assert(cameraState('orbit-right-subtle', 'none', 1.5, 9).s > 1, 'new orbit preset has cinematic scale');
   assert(cameraState('pushin', 'none', 2, 9).s > 1, 'push-in zooms in');
   assert(cameraState('pullout', 'none', 2, 9).s < 1.14, 'pull-out zooms out');
   assert(cameraState('panleft', 'none', 1, 9).dx < 0, 'pan left moves left');
