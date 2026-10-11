@@ -1,6 +1,6 @@
 import { W, H, clamp01, easeOutCubic, easeInOut, easeOutBack, rnd } from './util.js';
 
-export const TRANSITIONS = ['wipe', 'iris', 'stripes', 'glitch', 'curtain', 'diagonal', 'zoom', 'flash', 'slits', 'bands', 'ink', 'ribbon', 'dot', 'pixels', 'tilt', 'blurin', 'pageTurn'];
+export const TRANSITIONS = ['wipe', 'iris', 'stripes', 'glitch', 'curtain', 'diagonal', 'zoom', 'flash', 'slits', 'bands', 'ink', 'ribbon', 'dot', 'pixels', 'tilt', 'blurin', 'pageTurn', 'archiveZoom', 'filmBurn', 'paperTear', 'newspaper'];
 export const TRANS_LEN = 0.5;
 
 /* ---------- camera-type transitions: change HOW the new scene is drawn ---------- */
@@ -100,6 +100,55 @@ export function drawTransition(ctx, th, sc, t, kind, si) {
       }
     }
     ctx.globalAlpha = 1;
+  } else if (kind === 'archiveZoom') { // push into an archival photograph with a warm light leak
+    const p = easeInOut(clamp01(q));
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    const cw = cv.width, ch = cv.height;
+    ctx.globalAlpha = 0.96 * (1 - p);
+    ctx.fillStyle = '#25180e'; ctx.fillRect(0, 0, cw, ch);
+    ctx.globalAlpha = 0.45 * Math.sin(Math.PI * p);
+    const glow = ctx.createRadialGradient(cw * (0.18 + p * 0.64), ch * 0.45, 1, cw * (0.18 + p * 0.64), ch * 0.45, cw * 0.72);
+    glow.addColorStop(0, '#fff0b0'); glow.addColorStop(0.28, '#c77837'); glow.addColorStop(1, 'rgba(80,30,8,0)');
+    ctx.fillStyle = glow; ctx.fillRect(0, 0, cw, ch);
+    ctx.globalAlpha = 0.26 * (1 - p); ctx.strokeStyle = '#f0dfc0'; ctx.lineWidth = Math.max(2, cw * 0.003);
+    ctx.strokeRect(cw * 0.07, ch * 0.08, cw * 0.86, ch * 0.84);
+  } else if (kind === 'filmBurn') { // brief analogue film-burn flare with darkened edges
+    const p = easeInOut(clamp01(q));
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    const cw = cv.width, ch = cv.height;
+    const flareX = cw * (0.08 + 0.84 * p);
+    const flare = ctx.createLinearGradient(flareX - cw * 0.28, 0, flareX + cw * 0.28, 0);
+    flare.addColorStop(0, 'rgba(110,35,8,0)'); flare.addColorStop(0.42, `rgba(255,177,72,${0.68 * Math.sin(Math.PI * p)})`);
+    flare.addColorStop(0.52, `rgba(255,238,187,${0.72 * Math.sin(Math.PI * p)})`); flare.addColorStop(1, 'rgba(110,35,8,0)');
+    ctx.fillStyle = flare; ctx.fillRect(0, 0, cw, ch);
+    ctx.globalAlpha = 0.18 * Math.sin(Math.PI * p); ctx.fillStyle = '#2a1309'; ctx.fillRect(0, 0, cw, ch);
+  } else if (kind === 'paperTear') { // ragged-edged archival sheet wipes across the frame
+    const p = easeOutCubic(clamp01(q));
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    const cw = cv.width, ch = cv.height, edge = cw * (1 - p);
+    ctx.fillStyle = '#e4d4b5'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(edge, 0);
+    for (let y = 0; y <= ch + 8; y += ch / 18) ctx.lineTo(edge + (rnd(Math.floor(y / (ch / 18)) + si * 71) - 0.5) * cw * 0.035, y);
+    ctx.lineTo(0, ch); ctx.closePath(); ctx.fill();
+    ctx.globalAlpha = 0.24 * (1 - p); ctx.fillStyle = '#76583a';
+    for (let y = 0; y < ch; y += ch * 0.07) ctx.fillRect(0, y, Math.max(0, edge), Math.max(1, ch * 0.002));
+  } else if (kind === 'newspaper') { // newspaper column sheet slides away, revealing the scene below
+    const p = easeOutCubic(clamp01(q));
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    const cw = cv.width, ch = cv.height, sx = -cw * p;
+    ctx.fillStyle = '#e8dfca'; ctx.fillRect(sx, 0, cw, ch);
+    ctx.save(); ctx.beginPath(); ctx.rect(sx, 0, cw, ch); ctx.clip();
+    ctx.fillStyle = '#27221b'; ctx.globalAlpha = 0.8;
+    ctx.font = `900 ${Math.max(18, Math.round(ch * 0.065))}px Georgia, serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('THE DAILY CHRONICLE', sx + cw / 2, ch * 0.06);
+    ctx.fillRect(sx + cw * 0.06, ch * 0.15, cw * 0.88, Math.max(2, ch * 0.004));
+    for (let col = 0; col < 4; col++) {
+      const x = sx + cw * (0.07 + col * 0.225);
+      for (let row = 0; row < 17; row++) {
+        const yy = ch * (0.22 + row * 0.041);
+        ctx.globalAlpha = 0.18 + (row % 4) * 0.05; ctx.fillRect(x, yy, cw * (0.17 + rnd(col * 33 + row) * 0.035), Math.max(1, ch * 0.003));
+      }
+    }
+    ctx.restore();
   } else if (kind === 'pageTurn') { // warm archive-paper sheet peels away to reveal the next scene
     const p = easeOutCubic(clamp01(q));
     const x = -W * p;
