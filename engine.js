@@ -53,8 +53,9 @@ export function parseScript(src) {
       words.push({ text: tok, emph, tag: pending });
       pending = null;
     }
-    if (timeline && !words.length) words.push({ text: 'TIMELINE', emph: false, tag: null, timelineMarker: true });
-    return { words, ghost, giant, icons, button, timeline };
+    const isTimeline = timeline && !words.length;
+    if (isTimeline) words.push({ text: 'TIMELINE', emph: false, tag: null, timelineMarker: true });
+    return { words, ghost, giant, icons, button, timeline: isTimeline };
   }).filter(s => s.words.length);
 }
 
