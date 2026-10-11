@@ -227,42 +227,40 @@ export function drawTimelineOverlay(ctx, t, S, dateText) {
   ctx.globalAlpha = 1; ctx.filter = 'none';
   const panelY = H * .70, panelH = H * .27;
   const p = easeOutCubic(Math.max(0, Math.min(1, t / Math.max(.1, o.duration))));
-  // Match the reference composition: a glowing horizontal timeline reaches a node,
-  // rises vertically, then branches toward a circular event photo. The year sits
-  // above the branch between the node and photo. Keep the scene fully transparent.
-  const x1 = W * .08, nodeX = W * .405, imageX = W * .615;
-  const lineY = panelY + panelH * .70;
-  const branchY = panelY + panelH * .20;
-  const imageSize = Math.min(o.imageSize, panelH * .72);
+  // Clear 90-degree L bend like the reference: horizontal timeline -> glowing
+  // junction -> vertical riser -> horizontal arm ending at the event image.
+  const x1 = W * .06, nodeX = W * .405, imageX = W * .69;
+  const lineY = panelY + panelH * .68;
+  const branchY = panelY + panelH * .12;
+  const imageSize = Math.min(o.imageSize, panelH * .66);
   const imageRadius = ev.image ? imageSize / 2 : 0;
+  const armEndX = imageX - imageRadius * .72;
   drawGlowLine(ctx, x1, lineY, nodeX, lineY, o, p);
   drawGlowLine(ctx, nodeX, lineY, nodeX, branchY, o, p);
-  drawGlowLine(ctx, nodeX, branchY, imageX - imageRadius, branchY, o, p);
-  // Bright circular junction where the main line turns upward.
+  drawGlowLine(ctx, nodeX, branchY, armEndX, branchY, o, p);
+  // A crisp glowing ring marks the 90-degree turn.
   ctx.save();
   ctx.globalAlpha = p;
   ctx.shadowColor = o.glow; ctx.shadowBlur = o.glowOn ? o.glowStrength : 0;
-  ctx.fillStyle = o.marker;
-  ctx.beginPath(); ctx.arc(nodeX, lineY, Math.max(5, o.lineWidth * 1.8), 0, Math.PI * 2); ctx.fill();
-  ctx.shadowBlur = 0; ctx.fillStyle = o.bg;
-  ctx.beginPath(); ctx.arc(nodeX, lineY, Math.max(2, o.lineWidth * .75), 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = o.marker; ctx.lineWidth = Math.max(3, o.lineWidth);
+  ctx.beginPath(); ctx.arc(nodeX, lineY, Math.max(9, o.lineWidth * 2.4), 0, Math.PI * 2); ctx.stroke();
   ctx.restore();
-  // Year label is placed above the connector, not centered over the whole line.
+  // Put the year beside the upright section, as in the reference's central label.
   ctx.save();
   ctx.globalAlpha = p;
   ctx.fillStyle = o.yearText;
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
   ctx.shadowColor = o.glow; ctx.shadowBlur = o.glowOn ? 6 : 0;
   ctx.font = '700 ' + Math.min(o.fontSize, 48) + 'px ' + JSON.stringify(o.font) + ', Arial, sans-serif';
-  ctx.fillText(ev.date || dateText, (nodeX + imageX) / 2, branchY - Math.min(30, panelH * .15), imageX - nodeX);
+  ctx.fillText(ev.date || dateText, nodeX + W * .055, lineY, W * .23);
   ctx.restore();
-  // Event photo sits inside a circular outline at the end of the upper branch.
+  // The image overlaps the end of the upper arm inside a circular crop.
   if (ev.image && p > 0) {
     drawCircularImage(ctx, ev.image, imageX, branchY, imageSize * p, p, o.marker);
   } else {
     ctx.save();
     ctx.globalAlpha = p;
-    ctx.strokeStyle = o.marker; ctx.lineWidth = 2.5;
+    ctx.strokeStyle = o.marker; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.arc(imageX, branchY, Math.max(14, imageSize * .42), 0, Math.PI * 2); ctx.stroke();
     ctx.restore();
   }
