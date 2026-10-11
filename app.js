@@ -5,7 +5,9 @@ import { setCanvasDimensions } from './util.js';
 import { initTimeline, drawTimeline, drawTimelineOverlay, timelineDuration, timelineEnabled } from './timeline.js';
 
 const $ = id => document.getElementById(id);
-const cv = $('cv'), ctx = cv.getContext('2d');
+const cv = $('cv'), ctx = cv.getContext('2d', { alpha: false });
+ctx.imageSmoothingEnabled = true;
+ctx.imageSmoothingQuality = 'high';
 const state = { images: [], audioBuf: null, voice: null, marks: {}, marksFor: '', tl: null, nextId: 1 };
 initTimeline();
 let curT = 0, playing = false, exporting = false;
@@ -328,6 +330,8 @@ $('export').onclick = async () => {
     setCanvasDimensions(aspect);
     cv.width = outW;
     cv.height = outH;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     const S = outW / W;
     const format = $('format').value;
     const isMp4 = format === 'mp4';
