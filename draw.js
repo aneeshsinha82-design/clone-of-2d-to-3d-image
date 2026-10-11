@@ -56,7 +56,10 @@ function drawScene(ctx, t, S, tl, o) {
   if (tq >= 0 && tq < 1) cameraPre(ctx, tkind, tq);
   if (sc) {   // camera movement + scene exit (measured from the reference video)
     const ck = cameraFor(o.camera, si), xk = si < tl.scenes.length - 1 ? exitFor(o.camexit, si) : 'none';
-    if (ck !== 'off' || xk !== 'none') applyCamera(ctx, cameraState(ck, xk, t - sc.start, sc.end - t));
+    if (ck !== 'off' || xk !== 'none') {
+      const speed = Number.isFinite(o.cameraSpeed) ? Math.max(0.5, Math.min(2, o.cameraSpeed)) : 1;
+      applyCamera(ctx, cameraState(ck, xk, (t - sc.start) * speed, (sc.end - t) * speed));
+    }
   }
   ctx.fillStyle = th.bg; ctx.fillRect(-W, -H, 3 * W, 3 * H);
   if (th.paper) drawPaper(ctx);
