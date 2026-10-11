@@ -214,7 +214,7 @@ function drawCircularImage(ctx, img, x, y, size, progress, border) {
  * Draw a compact, transparent timeline overlay below the active script sentence.
  * Unlike drawTimeline(), this never clears the canvas, so the script and picture remain visible.
  */
-export function drawTimelineOverlay(ctx, t, S, dateText) {
+export function drawTimelineOverlay(ctx, t, S, dateText, relatedImage = null) {
   if (!timelineEnabled()) return false;
   const o = readOptions();
   const normalise = value => String(value || '').replace(/\s+/g, '').toUpperCase();
@@ -233,11 +233,14 @@ export function drawTimelineOverlay(ctx, t, S, dateText) {
   drawGlowLine(ctx, x1, y, x1 + (x2 - x1) * p, y, o, p);
   // Show the uploaded event image in the inline overlay as part of the timeline,
   // rather than only showing it in the separate full-screen timeline renderer.
-  if (ev.image && p > 0) {
+  // Prefer an image explicitly assigned to this timeline event; otherwise use
+  // the picture matched to the script sentence containing this year/date.
+  const eventImage = ev.image || relatedImage;
+  if (eventImage && p > 0) {
     const imageSize = Math.min(o.imageSize, panelH * 0.56);
     const imageX = W / 2;
     const imageY = y;
-    drawCircularImage(ctx, ev.image, imageX, imageY, imageSize * p, p, o.marker);
+    drawCircularImage(ctx, eventImage, imageX, imageY, imageSize * p, p, o.marker);
   }
   ctx.save();
   ctx.globalAlpha = p;
