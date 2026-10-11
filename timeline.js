@@ -104,6 +104,22 @@ export function timelineDuration() {
 export function timelineEnabled() { return readOptions().enabled && events.length > 0; }
 export function initTimeline() {
   renderEntries();
+  $('timelineTheme')?.addEventListener('change', e => {
+    const themes = {
+      custom: null,
+      gold: ['#ffd166','#ffb000','#ffffff','#ffd166','#050505','#00cfff'],
+      neon: ['#00cfff','#b56bff','#ffffff','#ff5db1','#050510','#00ff9f'],
+      vintage: ['#d6a96c','#a96f45','#f4e8d0','#d6a96c','#211b16','#8a9b70'],
+      mono: ['#ffffff','#aaaaaa','#ffffff','#dddddd','#050505','#888888'],
+      ocean: ['#00cfff','#0077ff','#ffffff','#00cfff','#061522','#67e8f9'],
+      forest: ['#00d68f','#007f5f','#f1fff7','#00d68f','#071b14','#b7e4c7']
+    };
+    const colors = themes[e.target.value];
+    if (colors) {
+      ['timelineLineColor','timelineGlowColor','timelineTextColor','timelineMarkerColor','timelineBgColor','timelineGradientColor'].forEach((id, i) => { $(id).value = colors[i]; });
+      window.dispatchEvent(new Event('timelinechange'));
+    }
+  });
   $('timelineImportScript')?.addEventListener('click', () => {
     const script = $('script')?.value || '';
     const years = [...new Set(script.match(/(?:1[0-9]{3}|20[0-9]{2}|21[0-9]{2})/g) || [])];
