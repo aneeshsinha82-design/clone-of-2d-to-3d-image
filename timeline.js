@@ -86,7 +86,7 @@ function readOptions() {
   const val = (id, fallback) => $(id) ? $(id).value : fallback;
   const checked = (id, fallback = false) => $(id) ? $(id).checked : fallback;
   return {
-    enabled: checked('timelineEnabled'), orientation: val('timelineOrientation', 'horizontal'), shape: val('timelineShape', 'l-bend'),
+    enabled: checked('timelineEnabled'), orientation: val('timelineOrientation', 'horizontal'),
     line: val('timelineLineColor', '#ffd166'), glow: val('timelineGlowColor', '#ffb000'),
     text: val('timelineTextColor', '#ffffff'), yearText: val('timelineYearColor', '#ffffff'), marker: val('timelineMarkerColor', '#ffd166'),
     bg: val('timelineBgColor', '#050505'), gradientEnd: val('timelineGradientColor', '#00cfff'),
@@ -181,7 +181,7 @@ export function initTimeline() {
     window.dispatchEvent(new Event('timelinechange'));
   });
   $('timelineReferencePalette')?.addEventListener('change', updatePaletteFromReference);
-  ['timelineEnabled','timelineOrientation','timelineShape','timelineLineColor','timelineGlowColor','timelineYearColor','timelineTextColor','timelineMarkerColor','timelineBgColor','timelineGradientColor','timelineGradient','timelineGlow','timelineLineWidth','timelineGlowStrength','timelineImageSize','timelineFontSize','timelineFont','timelineDuration','timelineInterval'].forEach(id => {
+  ['timelineEnabled','timelineOrientation','timelineLineColor','timelineGlowColor','timelineYearColor','timelineTextColor','timelineMarkerColor','timelineBgColor','timelineGradientColor','timelineGradient','timelineGlow','timelineLineWidth','timelineGlowStrength','timelineImageSize','timelineFontSize','timelineFont','timelineDuration','timelineInterval'].forEach(id => {
     $(id)?.addEventListener('input', () => window.dispatchEvent(new Event('timelinechange')));
     $(id)?.addEventListener('change', () => window.dispatchEvent(new Event('timelinechange')));
   });
@@ -227,76 +227,32 @@ export function drawTimelineOverlay(ctx, t, S, dateText) {
   ctx.globalAlpha = 1; ctx.filter = 'none';
   const panelY = H * .70, panelH = H * .27;
   const p = easeOutCubic(Math.max(0, Math.min(1, t / Math.max(.1, o.duration))));
-  // Ten selectable connector compositions. All use crisp 90-degree turns,
-  // animated line drawing, a year label, and a circular event image.
-  const shape = o.shape || 'l-bend';
+  // Restore the single original L-bend style, with the reference-video motion sequence.
   const lineY = panelY + panelH * .68;
-  const topY = panelY + panelH * .12, bottomY = panelY + panelH * .90;
-  const leftX = W * .07, nodeX = W * .38, midX = W * .55, imageX = W * .75;
+  const topY = panelY + panelH * .12;
+  const leftX = W * .07, nodeX = W * .38, imageX = W * .75;
   const imageSize = Math.min(o.imageSize, panelH * .62);
   const imageRadius = ev.image ? imageSize / 2 : 0;
   const armEnd = imageX - imageRadius * .72;
-  const stroke = (x1,y1,x2,y2) => drawGlowLine(ctx,x1,y1,x2,y2,o,p);
-  let labelX = nodeX + W*.055, labelY = lineY, labelAlign = 'left';
-  stroke(leftX,lineY,nodeX,lineY);
-  if (shape === 'l-bend') {
-    stroke(nodeX,lineY,nodeX,topY); stroke(nodeX,topY,armEnd,topY);
-    labelX = nodeX + W*.05; labelY = lineY;
-  } else if (shape === 'reverse-l') {
-    stroke(nodeX,lineY,nodeX,bottomY); stroke(nodeX,bottomY,armEnd,bottomY);
-    labelX=nodeX+W*.05; labelY=lineY;
-  } else if (shape === 'double-l') {
-    stroke(nodeX,lineY,nodeX,topY); stroke(nodeX,topY,midX,topY);
-    stroke(midX,topY,midX,bottomY); stroke(midX,bottomY,armEnd,bottomY);
-    labelX=midX-W*.12; labelY=topY-W*.025; labelAlign='center';
-  } else if (shape === 'step') {
-    stroke(nodeX,lineY,nodeX,topY); stroke(nodeX,topY,midX,topY);
-    stroke(midX,topY,midX,lineY); stroke(midX,lineY,armEnd,lineY);
-    labelX=midX+W*.02; labelY=lineY-W*.07;
-  } else if (shape === 'fork') {
-    stroke(nodeX,lineY,nodeX,topY); stroke(nodeX,topY,armEnd,topY);
-    stroke(nodeX,lineY,nodeX,bottomY); stroke(nodeX,bottomY,armEnd,bottomY);
-    labelX=nodeX+W*.04; labelY=lineY;
-  } else if (shape === 'u-turn') {
-    stroke(nodeX,lineY,nodeX,topY); stroke(nodeX,topY,midX,topY);
-    stroke(midX,topY,midX,bottomY); stroke(midX,bottomY,armEnd,bottomY);
-    labelX=(nodeX+midX)/2; labelY=topY-W*.035; labelAlign='center';
-  } else if (shape === 'frame') {
-    stroke(nodeX,lineY,nodeX,topY); stroke(nodeX,topY,midX,topY);
-    stroke(midX,topY,midX,bottomY); stroke(midX,bottomY,armEnd,bottomY);
-    stroke(nodeX,lineY,midX,lineY);
-    labelX=midX; labelY=lineY-W*.035; labelAlign='center';
-  } else if (shape === 'zigzag') {
-    stroke(nodeX,lineY,nodeX,topY); stroke(nodeX,topY,midX,topY);
-    stroke(midX,topY,midX,lineY); stroke(midX,lineY,armEnd,lineY);
-    labelX=(nodeX+midX)/2; labelY=topY-W*.03; labelAlign='center';
-  } else if (shape === 'corner-box') {
-    stroke(nodeX,lineY,nodeX,topY); stroke(nodeX,topY,armEnd,topY);
-    stroke(nodeX,lineY,midX,lineY); stroke(midX,lineY,midX,bottomY);
-    stroke(midX,bottomY,armEnd,bottomY);
-    labelX=nodeX+W*.04; labelY=lineY; 
-  } else if (shape === 'twin-branch') {
-    stroke(nodeX,lineY,nodeX,topY); stroke(nodeX,topY,armEnd,topY);
-    stroke(nodeX,lineY,midX,lineY); stroke(midX,lineY,midX,bottomY);
-    stroke(midX,bottomY,armEnd,bottomY);
-    labelX=nodeX+W*.04; labelY=lineY;
-  }
-  // Glowing ring at the main bend.
-  ctx.save(); ctx.globalAlpha=p; ctx.shadowColor=o.glow;
+  const phase = (start,end) => easeOutCubic(Math.max(0,Math.min(1,(t-start)/(end-start))));
+  drawGlowLine(ctx,leftX,lineY,nodeX,lineY,o,phase(0,.48));
+  drawGlowLine(ctx,nodeX,lineY,nodeX,topY,o,phase(.42,.78));
+  drawGlowLine(ctx,nodeX,topY,armEnd,topY,o,phase(.72,1.12));
+  const nodeP=phase(.36,.62);
+  ctx.save(); ctx.globalAlpha=nodeP; ctx.shadowColor=o.glow;
   ctx.shadowBlur=o.glowOn?o.glowStrength:0; ctx.strokeStyle=o.marker;
   ctx.lineWidth=Math.max(3,o.lineWidth); ctx.beginPath();
   ctx.arc(nodeX,lineY,Math.max(9,o.lineWidth*2.4),0,Math.PI*2); ctx.stroke(); ctx.restore();
-  // Year is offset beside the main junction; centered only for layouts that need it.
-  ctx.save(); ctx.globalAlpha=p; ctx.fillStyle=o.yearText;
-  ctx.textAlign=labelAlign; ctx.textBaseline='middle';
+  const yearP=phase(.55,.82);
+  ctx.save(); ctx.globalAlpha=yearP; ctx.fillStyle=o.yearText;
+  ctx.textAlign='left'; ctx.textBaseline='middle';
   ctx.shadowColor=o.glow; ctx.shadowBlur=o.glowOn?6:0;
   ctx.font='700 '+Math.min(o.fontSize,48)+'px '+JSON.stringify(o.font)+', Arial, sans-serif';
-  ctx.fillText(ev.date||dateText,labelX,labelY,W*.24); ctx.restore();
-  // Photo is attached to the active branch endpoint; lower-branch styles place it lower.
-  const imageY = ['reverse-l','double-l','u-turn','frame','twin-branch'].includes(shape) ? bottomY : topY;
-  if (ev.image && p>0) drawCircularImage(ctx,ev.image,imageX,imageY,imageSize*p,p,o.marker);
-  else { ctx.save(); ctx.globalAlpha=p; ctx.strokeStyle=o.marker; ctx.lineWidth=3;
-    ctx.beginPath(); ctx.arc(imageX,imageY,Math.max(14,imageSize*.42),0,Math.PI*2); ctx.stroke(); ctx.restore(); }
+  ctx.fillText(ev.date||dateText,nodeX+W*.05,lineY,W*.24); ctx.restore();
+  const imageP=phase(.98,1.42);
+  if (ev.image && imageP>0) drawCircularImage(ctx,ev.image,imageX,topY,imageSize*imageP,imageP,o.marker);
+  else { ctx.save(); ctx.globalAlpha=imageP; ctx.strokeStyle=o.marker; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.arc(imageX,topY,Math.max(14,imageSize*.42),Math.PI*1.5,Math.PI*1.5+Math.PI*2*imageP); ctx.stroke(); ctx.restore(); }
   // Keep event title/details available without displacing the reference year/photo layout.
   if (ev.title || ev.description) {
     ctx.save();
