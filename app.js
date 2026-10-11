@@ -2,10 +2,12 @@ import { parseScript, buildTimeline } from './engine.js';
 import { analyzeVoice, applyVoiceSync } from './sync.js';
 import { renderFrame, W, H } from './draw.js';
 import { setCanvasDimensions } from './util.js';
+import { initTimeline, drawTimeline, timelineDuration, timelineEnabled } from './timeline.js';
 
 const $ = id => document.getElementById(id);
 const cv = $('cv'), ctx = cv.getContext('2d');
 const state = { images: [], audioBuf: null, voice: null, marks: {}, marksFor: '', tl: null, nextId: 1 };
+initTimeline();
 let curT = 0, playing = false, exporting = false;
 
 $('script').value = `Tired of poor *Marketing*? {?}
@@ -24,7 +26,10 @@ const getOpts = () => ({
   layout: $('layout').value, fontSet: $('fontset').value, deco: $('deco').value, backdrop: $('backdrop').value,
   splash: $('splash').checked, reflect: $('reflect').checked, endStyle: $('endstyle').value, wrapper: $('wrapper').checked
 });
-const draw = (t, S) => renderFrame(ctx, t, S, state.tl, getOpts());
+const draw = (t, S) => {
+  if (drawTimeline(ctx, t, S)) return;
+  renderFrame(ctx, t, S, state.tl, getOpts());
+};
 // when paused at the very start, show a "poster" frame (first picture + first words) instead of a blank screen
 const shownT = () => {
   const tl = state.tl;
@@ -126,6 +131,7 @@ function refresh() {
     const ok = applyVoiceSync(state.tl, state.voice, { offset: +$('syncoff').value / 1000, marks: state.marks, audioDur: aDur });
     if (!ok) state.tl = buildTimeline(parseScript($('script').value), state.images, { ...bo, audioDur: aDur });
   }
+  if (timelineEnabled()) state.tl.total = timelineDuration();
   curT = Math.min(curT, state.tl.total);
   const tl = $('tl'); tl.innerHTML = '';
   state.tl.scenes.forEach((sc, i) => {
@@ -137,6 +143,7 @@ function refresh() {
   });
   draw(shownT(), cv.width / W); updateTime();
 }
+window.addEventListener('timelinechange', refresh);
 ['script', 'wpm', 'autofill', 'outro', 'theme', 'handle', 'handleIcon', 'picstyle', 'picpos', 'entrance', 'trans', 'textanim', 'textexit', 'layout', 'fontset', 'deco', 'backdrop', 'splash', 'reflect', 'endstyle', 'wrapper', 'sfx', 'syncmode', 'syncoff', 'camera', 'cameraSpeed', 'camexit'].forEach(id => {
   $(id).addEventListener('input', refresh); $(id).addEventListener('change', refresh);
 });
