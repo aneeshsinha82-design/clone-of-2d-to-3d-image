@@ -1,0 +1,24 @@
+name: Test project
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run logic and canvas-format tests
+        run: npm test
+      - name: Check application JavaScript syntax
+        run: |
+          node --check app.js
+          node --check draw.js
+          node --check util.js
+          node --check fx.js
