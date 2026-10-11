@@ -122,15 +122,50 @@ export function initTimeline() {
       window.dispatchEvent(new Event('timelinechange'));
     }
   });
-  $('timelineImportScript')?.addEventListener('click', () => {
+  // Extract date/year mentions together with the sentence that explains each event.
+  // Import automatically when the script's sequence of dates changes; keep manual event edits
+  // intact while the user changes unrelated wording.
+  const extractScriptEvents = () => {
     const script = $('script')?.value || '';
-    const years = [...new Set(script.match(/(?:1[0-9]{3}|20[0-9]{2}|21[0-9]{2})/g) || [])];
-    if (!years.length) { $('timelineReferencePreview').textContent = 'No four-digit years found in the script. Add events manually.'; return; }
+    const datePattern = /(?<!\d)(\d{1,4}\s*(?:BCE|BC|CE|AD)|(?:1[0-9]{3}|20[0-9]{2}|21[0-9]{2}))(?!\d)/gi;
+    const found = [];
+    const seen = new Set();
+    const chunks = script.split(/(?<=[.!?])\s+|\n+/).map(s => s.trim()).filter(Boolean);
+    for (const chunk of chunks) {
+      for (const match of chunk.matchAll(datePattern)) {
+        const rawDate = match[0].replace(/\s+/g, ' ').trim();
+        const key = rawDate.toUpperCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const title = chunk
+          .replace(match[0], '')
+          .replace(/[{}\[\]*]/g, '')
+          .replace(/\s+/g, ' ')
+          .replace(/^[\s,;:—–-]+|[\s,;:—–-]+$/g, '')
+          .trim();
+        found.push({ date: rawDate, title: title || 'Event ' + (found.length + 1) });
+      }
+    }
+    return found;
+  };
+  let lastAutoDateSignature = '';
+  const importScriptEvents = (automatic = false) => {
+    const extracted = extractScriptEvents();
+    if (!extracted.length) {
+      if (!automatic) $('timelineReferencePreview').textContent = 'No years or dates found in the script. Add years such as 1998 or 3000 BCE.';
+      return;
+    }
+    const signature = extracted.map(ev => ev.date.toUpperCase()).join('|');
+    if (automatic && signature === lastAutoDateSignature) return;
+    lastAutoDateSignature = signature;
     events.forEach(ev => ev.imageUrl && URL.revokeObjectURL(ev.imageUrl));
-    events.splice(0, events.length, ...years.map((year, i) => makeEvent({ date: year, title: 'Event ' + (i + 1) })));
+    events.splice(0, events.length, ...extracted.map(ev => makeEvent(ev)));
     renderEntries(); window.dispatchEvent(new Event('timelinechange'));
-    $('timelineReferencePreview').textContent = 'Imported ' + years.length + ' unique year(s). Review titles and upload event images.';
-  });
+    $('timelineReferencePreview').textContent = 'Detected ' + extracted.length + ' date/year event(s) from the script. Event titles were taken from the surrounding sentence; review or edit them below.';
+  };
+  $('timelineImportScript')?.addEventListener('click', () => importScriptEvents(false));
+  $('script')?.addEventListener('input', () => importScriptEvents(true));
+  $('script')?.addEventListener('change', () => importScriptEvents(true));
   $('timelineAdd')?.addEventListener('click', () => { events.push(makeEvent({ date: String(new Date().getFullYear()), title: 'New event' })); renderEntries(); window.dispatchEvent(new Event('timelinechange')); });
   $('timelineClear')?.addEventListener('click', () => { events.forEach(ev => ev.imageUrl && URL.revokeObjectURL(ev.imageUrl)); events.splice(0); events.push(makeEvent()); renderEntries(); window.dispatchEvent(new Event('timelinechange')); });
   $('timelineReference')?.addEventListener('change', async e => {
