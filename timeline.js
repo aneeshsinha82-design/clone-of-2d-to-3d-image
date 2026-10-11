@@ -230,6 +230,14 @@ export function drawTimelineOverlay(ctx, t, S, dateText) {
   // A light text shadow and the timeline line provide contrast without hiding the video.
   const x1 = W * .13, x2 = W * .87, y = panelY + panelH * .37;
   drawGlowLine(ctx, x1, y, x1 + (x2 - x1) * p, y, o, p);
+  // Show the uploaded event image in the inline overlay as part of the timeline,
+  // rather than only showing it in the separate full-screen timeline renderer.
+  if (ev.image && p > 0) {
+    const imageSize = Math.min(o.imageSize, panelH * 0.42);
+    const imageX = W / 2;
+    const imageY = y;
+    drawCircularImage(ctx, ev.image, imageX, imageY, imageSize * p, p, o.marker);
+  }
   ctx.save();
   ctx.globalAlpha = p;
   ctx.fillStyle = o.text;
