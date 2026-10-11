@@ -2,25 +2,9 @@ import { parseScript, buildTimeline } from './engine.js';
 import { analyzeVoice, applyVoiceSync } from './sync.js';
 import { renderFrame, W, H } from './draw.js';
 import { setCanvasDimensions } from './util.js';
-import { CAMERA_PRESETS } from './camera.js';
 
 const $ = id => document.getElementById(id);
 const cv = $('cv'), ctx = cv.getContext('2d');
-// Populate the camera picker from the tested 100-preset catalogue.
-{
-  const cameraSelect = $('camera');
-  cameraSelect.replaceChildren(new Option('Off', 'off'), new Option('Mix (different for each scene)', 'mix'));
-  const groups = new Map();
-  CAMERA_PRESETS.forEach(preset => {
-    if (!groups.has(preset.group)) {
-      const group = document.createElement('optgroup');
-      group.label = preset.group;
-      groups.set(preset.group, group);
-      cameraSelect.appendChild(group);
-    }
-    groups.get(preset.group).appendChild(new Option(preset.label, preset.id));
-  });
-}
 const state = { images: [], audioBuf: null, voice: null, marks: {}, marksFor: '', tl: null, nextId: 1 };
 let curT = 0, playing = false, exporting = false;
 
