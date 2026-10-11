@@ -1,6 +1,6 @@
 import { W, H, clamp01, easeOutCubic, easeInOut, easeOutBack, rnd } from './util.js';
 
-export const TRANSITIONS = ['wipe', 'iris', 'stripes', 'glitch', 'curtain', 'diagonal', 'zoom', 'flash', 'slits', 'bands', 'ink', 'ribbon', 'dot', 'tilt', 'blurin'];
+export const TRANSITIONS = ['wipe', 'iris', 'stripes', 'glitch', 'curtain', 'diagonal', 'zoom', 'flash', 'slits', 'bands', 'ink', 'ribbon', 'dot', 'pixels', 'tilt', 'blurin'];
 export const TRANS_LEN = 0.5;
 
 /* ---------- camera-type transitions: change HOW the new scene is drawn ---------- */
@@ -85,6 +85,21 @@ export function drawTransition(ctx, th, sc, t, kind, si) {
     }
     ctx.globalAlpha = 0.6 * (1 - q); ctx.fillStyle = th.accent;
     for (let i = 0; i < 3; i++) ctx.fillRect(0, rnd(step * 3 + i + 9) * ch, cw, ch * 0.006);
+  } else if (kind === 'pixels') { // Pixel-grid reveal inspired by the MIT-licensed Codrops PixelTransition study.
+    const cols = 12, rows = 22, cw = W / cols, ch = H / rows;
+    const progress = easeInOut(clamp01(q));
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        // Stable per-tile ordering prevents flicker during preview and export.
+        const order = rnd(si * 7919 + x * 127 + y * 311);
+        const threshold = order * 0.78 + ((x + y) % 5) * 0.044;
+        if (progress < threshold) {
+          ctx.globalAlpha = Math.min(1, (threshold - progress) * 3.2);
+          ctx.fillRect(x * cw, y * ch, cw + 1, ch + 1);
+        }
+      }
+    }
+    ctx.globalAlpha = 1;
   } else if (kind === 'zoom') {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     const s = 1 + 0.28 * (1 - q) * (1 - q), cw = cv.width, ch = cv.height;
