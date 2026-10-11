@@ -2,7 +2,7 @@ import { parseScript, buildTimeline } from './engine.js';
 import { analyzeVoice, applyVoiceSync } from './sync.js';
 import { renderFrame, W, H } from './draw.js';
 import { setCanvasDimensions } from './util.js';
-import { initTimeline, drawTimeline, timelineDuration, timelineEnabled } from './timeline.js';
+import { initTimeline, drawTimeline, drawTimelineOverlay, timelineDuration, timelineEnabled } from './timeline.js';
 
 const $ = id => document.getElementById(id);
 const cv = $('cv'), ctx = cv.getContext('2d');
@@ -27,12 +27,17 @@ const getOpts = () => ({
   splash: $('splash').checked, reflect: $('reflect').checked, endStyle: $('endstyle').value, wrapper: $('wrapper').checked
 });
 const draw = (t, S) => {
-  const timelineScene = state.tl?.scenes.find(sc => sc.timeline && t >= sc.start && t < sc.end);
-  if (timelineScene && timelineEnabled()) {
-    drawTimeline(ctx, t - timelineScene.start, S);
-    return;
-  }
+  // Keep the normal script scene visible. When a scene contains a year/date,
+  // animate that event's timeline underneath the text while that sentence plays.
   renderFrame(ctx, t, S, state.tl, getOpts());
+  if (!timelineEnabled() || !state.tl?.scenes?.length) return;
+  const scene = state.tl.scenes.find(sc => !sc.timeline && t >= sc.start && t < sc.end);
+  if (!scene) return;
+  const dateWord = scene.words.find(w => /(?:\d{3,4}\s*(?:BCE|BC|CE|AD)?)/i.test(w.text));
+  if (!dateWord) return;
+  const dateMatch = dateWord.text.match(/\d{3,4}\s*(?:BCE|BC|CE|AD)?/i);
+  if (!dateMatch) return;
+  drawTimelineOverlay(ctx, Math.max(0, t - dateWord.t), S, dateMatch[0]);
 };
 // when paused at the very start, show a "poster" frame (first picture + first words) instead of a blank screen
 const shownT = () => {
