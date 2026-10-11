@@ -10,7 +10,7 @@
 //   zoompush : scene zooms hugely into the cut, up to 2.6x (0.2 s)
 import { W, H, clamp01 } from './util.js';
 
-export const CAMERAS = ['riseup', 'settle', 'slidein', 'drift'];
+export const CAMERAS = ['riseup', 'settle', 'slidein', 'drift', 'pushin', 'pullout', 'panleft', 'panright', 'handheld', 'orbit'];
 export const EXITS = ['whipup', 'slideout', 'zoompush'];
 const EXIT_MIX = ['whipup', 'none', 'zoompush', 'slideout', 'none'];
 const EXIT_LEN = { whipup: 0.28, slideout: 0.33, zoompush: 0.2 };
@@ -33,6 +33,28 @@ export function cameraState(camKind, exitKind, u, r) {
     st.dx = 0.25 * W + 0.153 * W * Math.exp(-u / 0.25) - 0.167 * W * d;
     st.s = 1 + 0.016 * d;
     st.rot = 0.026 * d;
+  } else if (camKind === 'pushin') {
+    st.s = 1 + 0.12 * (1 - Math.exp(-Math.max(0, u) / 2.4));
+  } else if (camKind === 'pullout') {
+    st.s = 1.14 - 0.14 * (1 - Math.exp(-Math.max(0, u) / 1.8));
+  } else if (camKind === 'panleft') {
+    st.dx = -0.14 * W * (1 - Math.exp(-Math.max(0, u) / 1.25));
+    st.s = 1.08;
+  } else if (camKind === 'panright') {
+    st.dx = 0.14 * W * (1 - Math.exp(-Math.max(0, u) / 1.25));
+    st.s = 1.08;
+  } else if (camKind === 'handheld') {
+    // Deterministic low-amplitude motion keeps preview and export repeatable.
+    st.dx = Math.sin(u * 5.1) * 5 + Math.sin(u * 2.3) * 3;
+    st.dy = Math.sin(u * 4.2 + 0.7) * 4;
+    st.rot = Math.sin(u * 2.8) * 0.008;
+    st.s = 1.025;
+  } else if (camKind === 'orbit') {
+    const d = Math.min(Math.max(0, u), 3.5);
+    st.dx = Math.sin(d * 0.72) * W * 0.055;
+    st.dy = Math.cos(d * 0.62) * H * 0.018;
+    st.rot = Math.sin(d * 0.55) * 0.035;
+    st.s = 1.08 + 0.025 * Math.sin(d * 0.6);
   }
   const D = EXIT_LEN[exitKind];
   if (D && r < D) {
