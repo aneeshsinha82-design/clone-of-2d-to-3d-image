@@ -6,11 +6,6 @@ const events = [];
 let referenceImage = null;
 let referenceUrl = '';
 
-const defaults = [
-  { date: '1927', title: 'First milestone', description: '' },
-  { date: '1950', title: 'A new chapter', description: '' },
-  { date: '2026', title: 'Today', description: '' }
-];
 
 function makeEvent(data = {}) {
   return { id: nextId++, date: data.date || '', title: data.title || '', description: data.description || '', image: data.image || null, imageUrl: data.imageUrl || '' };
@@ -108,8 +103,16 @@ export function timelineDuration() {
 }
 export function timelineEnabled() { return readOptions().enabled && events.length > 0; }
 export function initTimeline() {
-  defaults.forEach(ev => events.push(makeEvent(ev)));
   renderEntries();
+  $('timelineImportScript')?.addEventListener('click', () => {
+    const script = $('script')?.value || '';
+    const years = [...new Set(script.match(/\\b(?:1[0-9]{3}|20[0-9]{2}|21[0-9]{2})\\b/g) || [])];
+    if (!years.length) { $('timelineReferencePreview').textContent = 'No four-digit years found in the script. Add events manually.'; return; }
+    events.forEach(ev => ev.imageUrl && URL.revokeObjectURL(ev.imageUrl));
+    events.splice(0, events.length, ...years.map((year, i) => makeEvent({ date: year, title: 'Event ' + (i + 1) })));
+    renderEntries(); window.dispatchEvent(new Event('timelinechange'));
+    $('timelineReferencePreview').textContent = 'Imported ' + years.length + ' unique year(s). Review titles and upload event images.';
+  });
   $('timelineAdd')?.addEventListener('click', () => { events.push(makeEvent({ date: String(new Date().getFullYear()), title: 'New event' })); renderEntries(); window.dispatchEvent(new Event('timelinechange')); });
   $('timelineClear')?.addEventListener('click', () => { events.forEach(ev => ev.imageUrl && URL.revokeObjectURL(ev.imageUrl)); events.splice(0); renderEntries(); window.dispatchEvent(new Event('timelinechange')); });
   $('timelineReference')?.addEventListener('change', async e => {
