@@ -106,7 +106,7 @@ export function initTimeline() {
   renderEntries();
   $('timelineImportScript')?.addEventListener('click', () => {
     const script = $('script')?.value || '';
-    const years = [...new Set(script.match(/\\b(?:1[0-9]{3}|20[0-9]{2}|21[0-9]{2})\\b/g) || [])];
+    const years = [...new Set(script.match(/(?:1[0-9]{3}|20[0-9]{2}|21[0-9]{2})/g) || [])];
     if (!years.length) { $('timelineReferencePreview').textContent = 'No four-digit years found in the script. Add events manually.'; return; }
     events.forEach(ev => ev.imageUrl && URL.revokeObjectURL(ev.imageUrl));
     events.splice(0, events.length, ...years.map((year, i) => makeEvent({ date: year, title: 'Event ' + (i + 1) })));
