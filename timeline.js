@@ -158,6 +158,7 @@ export function initTimeline() {
     const signature = extracted.map(ev => ev.date.toUpperCase()).join('|');
     if (automatic && signature === lastAutoDateSignature) return;
     lastAutoDateSignature = signature;
+    if ($('timelineEnabled')) $('timelineEnabled').checked = true;
     events.forEach(ev => ev.imageUrl && URL.revokeObjectURL(ev.imageUrl));
     events.splice(0, events.length, ...extracted.map(ev => makeEvent(ev)));
     renderEntries(); window.dispatchEvent(new Event('timelinechange'));
@@ -207,6 +208,48 @@ function drawCircularImage(ctx, img, x, y, size, progress, border) {
   ctx.restore();
   ctx.save(); ctx.strokeStyle = border; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, size / 2, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
 }
+
+/**
+ * Draw a compact, transparent timeline overlay below the active script sentence.
+ * Unlike drawTimeline(), this never clears the canvas, so the script and picture remain visible.
+ */
+export function drawTimelineOverlay(ctx, t, S, dateText) {
+  if (!timelineEnabled()) return false;
+  const o = readOptions();
+  const normalise = value => String(value || '').replace(/\\s+/g, '').toUpperCase();
+  const ev = events.find(item => normalise(item.date) === normalise(dateText))
+    || events.find(item => normalise(item.date).startsWith(normalise(dateText)))
+    || events.find(item => normalise(dateText).startsWith(normalise(item.date)));
+  if (!ev) return false;
+  ctx.save();
+  ctx.setTransform(S, 0, 0, S, 0, 0);
+  ctx.globalAlpha = 1; ctx.filter = 'none';
+  const panelY = H * .70, panelH = H * .27;
+  const p = easeOutCubic(Math.max(0, Math.min(1, t / Math.max(.1, o.duration))));
+  // Semi-transparent panel keeps the original scene visible behind the overlay.
+  ctx.fillStyle = 'rgba(0,0,0,0.76)';
+  ctx.beginPath(); ctx.roundRect(W * .06, panelY, W * .88, panelH, 28); ctx.fill();
+  const x1 = W * .13, x2 = W * .87, y = panelY + panelH * .37;
+  drawGlowLine(ctx, x1, y, x1 + (x2 - x1) * p, y, o, p);
+  ctx.save();
+  ctx.globalAlpha = p;
+  ctx.fillStyle = o.text;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.shadowColor = o.glow; ctx.shadowBlur = o.glowOn ? 6 : 0;
+  ctx.font = '700 ' + Math.min(o.fontSize, 48) + 'px ' + JSON.stringify(o.font) + ', Arial, sans-serif';
+  ctx.fillText(ev.date || dateText, W / 2, panelY + panelH * .18, W * .78);
+  ctx.shadowBlur = 0;
+  ctx.font = '600 ' + Math.max(18, Math.min(o.fontSize * .52, 28)) + 'px ' + JSON.stringify(o.font) + ', Arial, sans-serif';
+  ctx.fillText(ev.title || '', W / 2, panelY + panelH * .60, W * .78);
+  if (ev.description) {
+    ctx.font = '400 18px ' + JSON.stringify(o.font) + ', Arial, sans-serif';
+    ctx.fillText(ev.description, W / 2, panelY + panelH * .79, W * .78);
+  }
+  ctx.restore();
+  ctx.restore();
+  return true;
+}
+
 export function drawTimeline(ctx, t, S) {
   if (!timelineEnabled()) return false;
   const o = readOptions(), total = timelineDuration();
