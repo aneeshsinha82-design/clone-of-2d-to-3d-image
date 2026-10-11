@@ -88,7 +88,7 @@ function readOptions() {
   return {
     enabled: checked('timelineEnabled'), orientation: val('timelineOrientation', 'horizontal'),
     line: val('timelineLineColor', '#ffd166'), glow: val('timelineGlowColor', '#ffb000'),
-    text: val('timelineTextColor', '#ffffff'), marker: val('timelineMarkerColor', '#ffd166'),
+    text: val('timelineTextColor', '#ffffff'), yearText: val('timelineYearColor', '#ffffff'), marker: val('timelineMarkerColor', '#ffd166'),
     bg: val('timelineBgColor', '#050505'), gradientEnd: val('timelineGradientColor', '#00cfff'),
     gradient: checked('timelineGradient'), glowOn: checked('timelineGlow', true),
     lineWidth: Number(val('timelineLineWidth', 3)), glowStrength: Number(val('timelineGlowStrength', 12)),
@@ -118,7 +118,8 @@ export function initTimeline() {
     };
     const colors = themes[e.target.value];
     if (colors) {
-      ['timelineLineColor','timelineGlowColor','timelineTextColor','timelineMarkerColor','timelineBgColor','timelineGradientColor'].forEach((id, i) => { $(id).value = colors[i]; });
+      ['timelineLineColor','timelineGlowColor','timelineYearColor','timelineMarkerColor','timelineBgColor','timelineGradientColor'].forEach((id, i) => { $(id).value = colors[i]; });
+      $('timelineTextColor').value = colors[2];
       window.dispatchEvent(new Event('timelinechange'));
     }
   });
@@ -180,7 +181,7 @@ export function initTimeline() {
     window.dispatchEvent(new Event('timelinechange'));
   });
   $('timelineReferencePalette')?.addEventListener('change', updatePaletteFromReference);
-  ['timelineEnabled','timelineOrientation','timelineLineColor','timelineGlowColor','timelineTextColor','timelineMarkerColor','timelineBgColor','timelineGradientColor','timelineGradient','timelineGlow','timelineLineWidth','timelineGlowStrength','timelineImageSize','timelineFontSize','timelineFont','timelineDuration','timelineInterval'].forEach(id => {
+  ['timelineEnabled','timelineOrientation','timelineLineColor','timelineGlowColor','timelineYearColor','timelineTextColor','timelineMarkerColor','timelineBgColor','timelineGradientColor','timelineGradient','timelineGlow','timelineLineWidth','timelineGlowStrength','timelineImageSize','timelineFontSize','timelineFont','timelineDuration','timelineInterval'].forEach(id => {
     $(id)?.addEventListener('input', () => window.dispatchEvent(new Event('timelinechange')));
     $(id)?.addEventListener('change', () => window.dispatchEvent(new Event('timelinechange')));
   });
@@ -233,14 +234,14 @@ export function drawTimelineOverlay(ctx, t, S, dateText) {
   // Show the uploaded event image in the inline overlay as part of the timeline,
   // rather than only showing it in the separate full-screen timeline renderer.
   if (ev.image && p > 0) {
-    const imageSize = Math.min(o.imageSize, panelH * 0.42);
+    const imageSize = Math.min(o.imageSize, panelH * 0.56);
     const imageX = W / 2;
     const imageY = y;
     drawCircularImage(ctx, ev.image, imageX, imageY, imageSize * p, p, o.marker);
   }
   ctx.save();
   ctx.globalAlpha = p;
-  ctx.fillStyle = o.text;
+  ctx.fillStyle = o.yearText;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.shadowColor = o.glow; ctx.shadowBlur = o.glowOn ? 6 : 0;
   ctx.font = '700 ' + Math.min(o.fontSize, 48) + 'px ' + JSON.stringify(o.font) + ', Arial, sans-serif';
@@ -281,7 +282,7 @@ export function drawTimeline(ctx, t, S) {
     ctx.fillStyle = o.bg; ctx.beginPath(); ctx.arc(x, y, Math.max(3, 7 * p), 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.restore();
     const labelY = horizontal ? y - Math.max(45, o.imageSize * .65) : y - 18;
     const labelX = horizontal ? x : x + 42;
-    ctx.save(); ctx.globalAlpha = p; ctx.fillStyle = o.text; ctx.textAlign = horizontal ? 'center' : 'left'; ctx.textBaseline = 'middle';
+    ctx.save(); ctx.globalAlpha = p; ctx.fillStyle = o.yearText; ctx.textAlign = horizontal ? 'center' : 'left'; ctx.textBaseline = 'middle';
     ctx.font = '700 ' + o.fontSize + 'px ' + JSON.stringify(o.font) + ', Arial, sans-serif';
     ctx.shadowColor = o.glow; ctx.shadowBlur = o.glowOn ? 5 : 0;
     ctx.fillText(ev.date || 'Year', labelX, labelY, horizontal ? Math.max(80, (W - 2 * pad) / count) : W * .42);
