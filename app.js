@@ -1,6 +1,7 @@
 import { parseScript, buildTimeline } from './engine.js';
 import { analyzeVoice, applyVoiceSync } from './sync.js';
 import { renderFrame, W, H } from './draw.js';
+import { setCanvasDimensions } from './util.js';
 
 const $ = id => document.getElementById(id);
 const cv = $('cv'), ctx = cv.getContext('2d');
@@ -31,6 +32,24 @@ const shownT = () => {
   const first = tl.events.length ? tl.events[0].t : (tl.scenes[0] ? tl.scenes[0].start : 0);
   return Math.min(first + 1.0, tl.total);
 };
+
+function updateResolutionLabels() {
+  const aspect = $('aspect').value;
+  [...$('res').options].forEach(option => {
+    const edge = Number(option.value);
+    let width = edge, height = Math.round(edge * 16 / 9);
+    if (aspect === 'landscape') { width = Math.round(edge * 16 / 9); height = edge; }
+    else if (aspect === 'square') { width = edge; height = edge; }
+    const name = edge === 720 ? 'HD' : edge === 1080 ? 'Full HD' : '2K / 1440p';
+    option.textContent = `${name} ${width}×${height}`;
+  });
+}
+function applyAspect() {
+  setCanvasDimensions($('aspect').value);
+  cv.width = Math.round(W / 2);
+  cv.height = Math.round(H / 2);
+  updateResolutionLabels();
+}
 
 /* ---------- quick style preset ---------- */
 const PRESETS = {
@@ -120,6 +139,10 @@ function refresh() {
 }
 ['script', 'wpm', 'autofill', 'outro', 'theme', 'handle', 'handleIcon', 'picstyle', 'picpos', 'entrance', 'trans', 'textanim', 'textexit', 'layout', 'fontset', 'deco', 'backdrop', 'splash', 'reflect', 'endstyle', 'wrapper', 'sfx', 'syncmode', 'syncoff', 'camera', 'cameraSpeed', 'camexit'].forEach(id => {
   $(id).addEventListener('input', refresh); $(id).addEventListener('change', refresh);
+});
+$('aspect').addEventListener('change', () => { applyAspect(); refresh(); });
+$('format').addEventListener('change', () => {
+  $('export').textContent = $('format').value === 'mp4' ? '⬇ Export MP4' : '⬇ Export WebM';
 });
 
 /* ---------- audio: voice-over + whoosh sound effects ---------- */
