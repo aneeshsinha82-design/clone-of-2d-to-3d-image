@@ -127,21 +127,21 @@ export function initTimeline() {
   // intact while the user changes unrelated wording.
   const extractScriptEvents = () => {
     const script = $('script')?.value || '';
-    const datePattern = /(?<!\\d)(\\d{1,4}\\s*(?:BCE|BC|CE|AD)|(?:1[0-9]{3}|20[0-9]{2}|21[0-9]{2}))(?!\\d)/gi;
+    const datePattern = /(?<!\d)(\d{1,4}\s*(?:BCE|BC|CE|AD)|(?:1[0-9]{3}|20[0-9]{2}|21[0-9]{2}))(?!\d)/gi;
     const found = [];
     const seen = new Set();
-    const chunks = script.split(/(?<=[.!?])\\s+|\\n+/).map(s => s.trim()).filter(Boolean);
+    const chunks = script.split(/(?<=[.!?])\s+|\n+/).map(s => s.trim()).filter(Boolean);
     for (const chunk of chunks) {
       for (const match of chunk.matchAll(datePattern)) {
-        const rawDate = match[0].replace(/\\s+/g, ' ').trim();
+        const rawDate = match[0].replace(/\s+/g, ' ').trim();
         const key = rawDate.toUpperCase();
         if (seen.has(key)) continue;
         seen.add(key);
         const title = chunk
           .replace(match[0], '')
-          .replace(/[{}\\[\\]*]/g, '')
-          .replace(/\\s+/g, ' ')
-          .replace(/^[\\s,;:—–-]+|[\\s,;:—–-]+$/g, '')
+          .replace(/[{}\[\]*]/g, '')
+          .replace(/\s+/g, ' ')
+          .replace(/^[\s,;:—–-]+|[\s,;:—–-]+$/g, '')
           .trim();
         found.push({ date: rawDate, title: title || 'Event ' + (found.length + 1) });
       }
