@@ -227,33 +227,61 @@ export function drawTimelineOverlay(ctx, t, S, dateText) {
   ctx.globalAlpha = 1; ctx.filter = 'none';
   const panelY = H * .70, panelH = H * .27;
   const p = easeOutCubic(Math.max(0, Math.min(1, t / Math.max(.1, o.duration))));
-  // Keep the overlay floating over the scene: no filled panel or black box.
-  // A light text shadow and the timeline line provide contrast without hiding the video.
-  const x1 = W * .13, x2 = W * .87, y = panelY + panelH * .37;
-  drawGlowLine(ctx, x1, y, x1 + (x2 - x1) * p, y, o, p);
-  // Show the uploaded event image in the inline overlay as part of the timeline,
-  // rather than only showing it in the separate full-screen timeline renderer.
-  if (ev.image && p > 0) {
-    const imageSize = Math.min(o.imageSize, panelH * 0.56);
-    const imageX = W / 2;
-    const imageY = y;
-    drawCircularImage(ctx, ev.image, imageX, imageY, imageSize * p, p, o.marker);
-  }
+  // Match the reference composition: a glowing horizontal timeline reaches a node,
+  // rises vertically, then branches toward a circular event photo. The year sits
+  // above the branch between the node and photo. Keep the scene fully transparent.
+  const x1 = W * .08, nodeX = W * .405, imageX = W * .615;
+  const lineY = panelY + panelH * .70;
+  const branchY = panelY + panelH * .20;
+  const imageSize = Math.min(o.imageSize, panelH * .72);
+  const imageRadius = ev.image ? imageSize / 2 : 0;
+  drawGlowLine(ctx, x1, lineY, nodeX, lineY, o, p);
+  drawGlowLine(ctx, nodeX, lineY, nodeX, branchY, o, p);
+  drawGlowLine(ctx, nodeX, branchY, imageX - imageRadius, branchY, o, p);
+  // Bright circular junction where the main line turns upward.
+  ctx.save();
+  ctx.globalAlpha = p;
+  ctx.shadowColor = o.glow; ctx.shadowBlur = o.glowOn ? o.glowStrength : 0;
+  ctx.fillStyle = o.marker;
+  ctx.beginPath(); ctx.arc(nodeX, lineY, Math.max(5, o.lineWidth * 1.8), 0, Math.PI * 2); ctx.fill();
+  ctx.shadowBlur = 0; ctx.fillStyle = o.bg;
+  ctx.beginPath(); ctx.arc(nodeX, lineY, Math.max(2, o.lineWidth * .75), 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+  // Year label is placed above the connector, not centered over the whole line.
   ctx.save();
   ctx.globalAlpha = p;
   ctx.fillStyle = o.yearText;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.shadowColor = o.glow; ctx.shadowBlur = o.glowOn ? 6 : 0;
   ctx.font = '700 ' + Math.min(o.fontSize, 48) + 'px ' + JSON.stringify(o.font) + ', Arial, sans-serif';
-  ctx.fillText(ev.date || dateText, W / 2, panelY + panelH * .18, W * .78);
-  ctx.shadowBlur = 0;
-  ctx.font = '600 ' + Math.max(18, Math.min(o.fontSize * .52, 28)) + 'px ' + JSON.stringify(o.font) + ', Arial, sans-serif';
-  ctx.fillText(ev.title || '', W / 2, panelY + panelH * .60, W * .78);
-  if (ev.description) {
-    ctx.font = '400 18px ' + JSON.stringify(o.font) + ', Arial, sans-serif';
-    ctx.fillText(ev.description, W / 2, panelY + panelH * .79, W * .78);
-  }
+  ctx.fillText(ev.date || dateText, (nodeX + imageX) / 2, branchY - Math.min(30, panelH * .15), imageX - nodeX);
   ctx.restore();
+  // Event photo sits inside a circular outline at the end of the upper branch.
+  if (ev.image && p > 0) {
+    drawCircularImage(ctx, ev.image, imageX, branchY, imageSize * p, p, o.marker);
+  } else {
+    ctx.save();
+    ctx.globalAlpha = p;
+    ctx.strokeStyle = o.marker; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(imageX, branchY, Math.max(14, imageSize * .42), 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+  }
+  // Keep event title/details available without displacing the reference year/photo layout.
+  if (ev.title || ev.description) {
+    ctx.save();
+    ctx.globalAlpha = p;
+    ctx.fillStyle = o.text; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.shadowColor = o.glow; ctx.shadowBlur = o.glowOn ? 4 : 0;
+    ctx.font = '600 ' + Math.max(14, Math.min(o.fontSize * .42, 24)) + 'px ' + JSON.stringify(o.font) + ', Arial, sans-serif';
+    const detailY = lineY + Math.min(24, panelH * .12);
+    if (ev.title) ctx.fillText(ev.title, W * .60, detailY, W * .72);
+    if (ev.description) {
+      ctx.shadowBlur = 0;
+      ctx.font = '400 16px ' + JSON.stringify(o.font) + ', Arial, sans-serif';
+      ctx.fillText(ev.description, W * .60, detailY + 26, W * .72);
+    }
+    ctx.restore();
+  }
   ctx.restore();
   return true;
 }
