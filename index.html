@@ -19,6 +19,37 @@
     <div id="imglist"></div>
     <p class="hint">Rename each picture. Use commas for several trigger words: <code>walter, heisenberg</code>. Click “Insert [tag]” to put the tag in the script.</p>
 
+    <h2>Timeline Animation <small>(separate tool for chronological scripts)</small></h2>
+    <details id="timelinePanel">
+      <summary><label class="chk"><input id="timelineEnabled" type="checkbox"> Enable Timeline Animation</label></summary>
+      <p class="hint">Add year/date events, upload a design reference and individual event pictures. Timeline elements are rendered into preview and export.</p>
+      <div class="grid">
+        <label>Timeline design reference <input id="timelineReference" type="file" accept="image/*"></label>
+        <label>Orientation <select id="timelineOrientation"><option value="horizontal">Horizontal</option><option value="vertical">Vertical</option></select></label>
+        <label>Colour theme <select id="timelineTheme"><option value="custom">Custom</option><option value="gold">Gold cinematic</option><option value="neon">Neon cyberpunk</option><option value="vintage">Vintage documentary</option><option value="mono">Monochrome</option><option value="ocean">Ocean blue</option><option value="forest">Forest green</option></select></label>
+        <label>Timeline line colour <input id="timelineLineColor" type="color" value="#ffd166"></label>
+        <label>Glow colour <input id="timelineGlowColor" type="color" value="#ffb000"></label>
+        <label>Year / title colour <input id="timelineTextColor" type="color" value="#ffffff"></label>
+        <label>Marker / connector colour <input id="timelineMarkerColor" type="color" value="#ffd166"></label>
+        <label>Background colour <input id="timelineBgColor" type="color" value="#050505"></label>
+        <label>Gradient end colour <input id="timelineGradientColor" type="color" value="#00cfff"></label>
+        <label>Line width <input id="timelineLineWidth" type="range" min="1" max="16" value="3"></label>
+        <label>Glow intensity <input id="timelineGlowStrength" type="range" min="0" max="30" value="12"></label>
+        <label>Marker image size <input id="timelineImageSize" type="range" min="28" max="180" value="88"></label>
+        <label>Year font size <input id="timelineFontSize" type="range" min="18" max="84" value="42"></label>
+        <label>Timeline font <select id="timelineFont"><option value="Inter">Inter</option><option value="Oswald">Oswald</option><option value="Anton">Anton</option><option value="Montserrat">Montserrat</option><option value="Playfair Display">Playfair Display</option><option value="Space Mono">Space Mono</option><option value="Bebas Neue">Bebas Neue</option></select></label>
+        <label>Reveal duration (seconds) <input id="timelineDuration" type="number" min="0.1" max="10" step="0.1" value="0.7"></label>
+        <label>Event interval (seconds) <input id="timelineInterval" type="number" min="0.2" max="30" step="0.1" value="2.2"></label>
+        <label class="chk"><input id="timelineGradient" type="checkbox"> Use line gradient</label>
+        <label class="chk"><input id="timelineGlow" type="checkbox" checked> Enable glow</label>
+        <label class="chk"><input id="timelineReferencePalette" type="checkbox"> Suggest colours from reference image</label>
+      </div>
+      <div class="timeline-actions"><button id="timelineImportScript" type="button">Import years from script</button><button id="timelineAdd" type="button">+ Add timeline event</button><button id="timelineClear" type="button">Clear events</button></div>
+      <div id="timelineReferencePreview" class="hint"></div>
+      <div id="timelineEntries"></div>
+      <p class="hint">Each event has an editable year/date, title, description and its own image. Entries reveal in order. Use the reference image as visual guidance; it does not replace editable timeline content.</p>
+    </details>
+
     <h2>3 · Voice-over <small>(optional)</small></h2>
     <label class="btn" for="aud">+ Add audio</label><input id="aud" type="file" accept="audio/*" hidden>
     <span id="audname" class="hint"></span>
