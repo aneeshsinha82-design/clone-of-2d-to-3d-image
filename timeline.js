@@ -50,19 +50,19 @@ function renderEntries() {
     const down = document.createElement('button'); down.type = 'button'; down.textContent = '↓'; down.title = 'Move event down'; down.disabled = index === events.length - 1;
     down.onclick = () => { [events[index + 1], events[index]] = [events[index], events[index + 1]]; renderEntries(); };
     const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = '✕'; remove.title = 'Remove event';
-    remove.onclick = () => { if (ev.imageUrl) URL.revokeObjectURL(ev.imageUrl); events.splice(index, 1); renderEntries(); window.dispatchEvent(new Event('timelinechange')); };
+    remove.onclick = () => { if (ev.imageUrl) URL.revokeObjectURL(ev.imageUrl); events.splice(index, 1); if (!events.length) events.push(makeEvent()); renderEntries(); window.dispatchEvent(new Event('timelinechange')); };
     actions.append(up, down, remove);
     head.append(label, actions);
     const grid = document.createElement('div'); grid.className = 'grid timeline-event-fields';
     const field = (name, value, placeholder, multiline = false) => {
-      const wrap = document.createElement('label'); wrap.textContent = name;
+      const wrap = document.createElement('label'); wrap.textContent = name; wrap.className = name === 'Year / date' ? 'timeline-year-field' : '';
       const input = multiline ? document.createElement('textarea') : document.createElement('input');
       input.value = value; input.placeholder = placeholder;
       if (multiline) input.rows = 2;
       input.oninput = () => { ev[name === 'Year / date' ? 'date' : name === 'Title' ? 'title' : 'description'] = input.value; window.dispatchEvent(new Event('timelinechange')); };
       wrap.append(input); return wrap;
     };
-    grid.append(field('Year / date', ev.date, 'e.g. 1927'), field('Title', ev.title, 'Event title'), field('Description', ev.description, 'Optional details', true));
+    grid.append(field('Year / date', ev.date, 'Type a year, e.g. 1998'), field('Title', ev.title, 'Event title'), field('Description', ev.description, 'Optional details', true));
     const imageWrap = document.createElement('label'); imageWrap.className = 'timeline-image-field'; imageWrap.textContent = 'Event image';
     const file = document.createElement('input'); file.type = 'file'; file.accept = 'image/*';
     const status = document.createElement('span'); status.className = 'hint'; status.textContent = ev.image ? 'Image uploaded' : 'No image uploaded';
@@ -103,6 +103,8 @@ export function timelineDuration() {
 }
 export function timelineEnabled() { return readOptions().enabled && events.length > 0; }
 export function initTimeline() {
+  // Start with one editable event so the user immediately has a place to type a year.
+  if (!events.length) events.push(makeEvent());
   renderEntries();
   $('timelineTheme')?.addEventListener('change', e => {
     const themes = {
