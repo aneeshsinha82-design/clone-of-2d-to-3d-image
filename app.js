@@ -19,7 +19,7 @@ const fmt = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2,
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 const getOpts = () => ({
   theme: $('theme').value, handle: $('handle').value.trim(), handleIcon: $('handleIcon').value, picStyle: $('picstyle').value, picPos: $('picpos').value,
-  entrance: $('entrance').value, trans: $('trans').value, camera: $('camera').value, camexit: $('camexit').value, textAnim: $('textanim').value, textExit: $('textexit').value,
+  entrance: $('entrance').value, trans: $('trans').value, camera: $('camera').value, cameraSpeed: +$('cameraSpeed').value / 100, camexit: $('camexit').value, textAnim: $('textanim').value, textExit: $('textexit').value,
   layout: $('layout').value, fontSet: $('fontset').value, deco: $('deco').value, backdrop: $('backdrop').value,
   splash: $('splash').checked, reflect: $('reflect').checked, endStyle: $('endstyle').value, wrapper: $('wrapper').checked
 });
@@ -97,6 +97,7 @@ $('aud').onchange = async e => {
 /* ---------- timeline ---------- */
 function refresh() {
   $('wpmv').textContent = $('wpm').value + ' wpm';
+  $('cameraSpeedValue').textContent = (+$('cameraSpeed').value / 100).toFixed(1) + '×';
   const aDur = state.audioBuf ? state.audioBuf.duration : 0, smart = $('syncmode').value === 'smart' && state.voice;
   const bo = { wpm: +$('wpm').value, autoFill: $('autofill').checked, outro: $('outro').checked };
   $('syncoffv').textContent = (+$('syncoff').value / 1000).toFixed(2) + ' s';
@@ -117,7 +118,7 @@ function refresh() {
   });
   draw(shownT(), cv.width / W); updateTime();
 }
-['script', 'wpm', 'autofill', 'outro', 'theme', 'handle', 'handleIcon', 'picstyle', 'picpos', 'entrance', 'trans', 'textanim', 'textexit', 'layout', 'fontset', 'deco', 'backdrop', 'splash', 'reflect', 'endstyle', 'wrapper', 'sfx', 'syncmode', 'syncoff', 'camera', 'camexit'].forEach(id => {
+['script', 'wpm', 'autofill', 'outro', 'theme', 'handle', 'handleIcon', 'picstyle', 'picpos', 'entrance', 'trans', 'textanim', 'textexit', 'layout', 'fontset', 'deco', 'backdrop', 'splash', 'reflect', 'endstyle', 'wrapper', 'sfx', 'syncmode', 'syncoff', 'camera', 'cameraSpeed', 'camexit'].forEach(id => {
   $(id).addEventListener('input', refresh); $(id).addEventListener('change', refresh);
 });
 
