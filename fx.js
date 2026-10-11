@@ -155,7 +155,26 @@ export function drawDeco(ctx, th, style, si, total, t) {
   if (!style || style === 'none') return;
   ctx.save();
   ctx.fillStyle = th.muted; ctx.strokeStyle = th.muted;
-  if (style === 'tech') {
+  if (style === 'archive') {
+    // Warm archival documentary treatment with restrained vignette, frame marks and stable film grain.
+    ctx.save();
+    ctx.globalAlpha = 0.16; ctx.fillStyle = '#c58a4a'; ctx.fillRect(0, 0, W, H);
+    const vignette = ctx.createRadialGradient(W * 0.5, H * 0.48, Math.min(W, H) * 0.16, W * 0.5, H * 0.48, Math.max(W, H) * 0.72);
+    vignette.addColorStop(0, 'rgba(18,12,7,0)'); vignette.addColorStop(1, 'rgba(18,12,7,0.58)');
+    ctx.globalAlpha = 0.82; ctx.fillStyle = vignette; ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = 0.35; ctx.strokeStyle = '#e8d4b0'; ctx.lineWidth = 3;
+    ctx.strokeRect(42, 42, W - 84, H - 84);
+    for (let i = 0; i < 34; i++) {
+      const x = rnd(Math.floor(t * 8) * 991 + i * 17) * W;
+      const y = rnd(Math.floor(t * 8) * 617 + i * 29) * H;
+      const len = 2 + rnd(i * 13 + Math.floor(t * 8)) * 13;
+      ctx.globalAlpha = 0.025 + rnd(i + 4) * 0.045; ctx.fillStyle = '#fff1d8'; ctx.fillRect(x, y, len, 2);
+    }
+    ctx.globalAlpha = 0.72; ctx.fillStyle = '#f0dfc0'; ctx.font = '600 23px "Courier New", monospace';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.fillText('ARCHIVE / DOCUMENTARY', 66, 62);
+    ctx.textAlign = 'right'; ctx.fillText(`FRAME ${String(Math.max(1, Math.floor(t * 24))).padStart(5, '0')}`, W - 66, 62);
+    ctx.restore();
+  } else if (style === 'tech') {
     // graph paper with crosshair marks, slowly drifting
     ctx.globalAlpha = 0.28; ctx.lineWidth = 1.5;
     ctx.save(); ctx.translate(W / 2, H / 2); ctx.rotate(Math.sin(t * 0.35) * 0.012); ctx.translate(-W / 2, -H / 2);
