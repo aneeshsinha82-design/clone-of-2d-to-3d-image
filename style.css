@@ -44,3 +44,30 @@ details .grid{margin-top:8px}
 #timelinePanel .grid input[type=color]{width:100%;height:38px;padding:3px;background:#11151d;border:1px solid #2a3240;border-radius:8px}
 #timelinePanel .grid input[type=range]{width:100%}
 @media(max-width:520px){.timeline-event-fields{grid-template-columns:1fr}.timeline-event-fields textarea,.timeline-image-field,.timeline-thumb{grid-column:span 1}}
+
+
+/* Timeline editor usability improvements */
+.timeline-help{font-size:13px;line-height:1.5;color:#b8c3d4}
+.timeline-enable{display:flex;align-items:center;gap:9px;padding:11px 12px;margin:10px 0;background:#171e29;border:1px solid #344256;border-radius:10px;font-size:13px;color:#eceff4}
+.timeline-enable input{width:17px;height:17px;accent-color:#ff3b2f}
+.timeline-add{background:#ff3b2f;color:#fff;border-color:#ff3b2f}
+.timeline-actions button{min-height:40px}
+#timelineEntries{display:grid;gap:10px}
+.timeline-event{padding:14px;margin-top:0}
+.timeline-event-fields{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:12px}
+.timeline-event-fields label{min-width:0;font-size:13px}
+.timeline-event-fields input:not([type=file]),.timeline-event-fields textarea{min-height:42px;font-size:14px;padding:10px}
+.timeline-event-fields .timeline-year-field{grid-column:1}
+.timeline-event-fields .timeline-year-field input{font-size:16px;font-weight:700;letter-spacing:.3px}
+.timeline-event-fields label:nth-child(2){grid-column:2}
+.timeline-event-fields label:nth-child(3){grid-column:1 / -1}
+.timeline-event-fields .timeline-image-field{grid-column:1 / -1}
+.timeline-event-fields input:focus,.timeline-event-fields textarea:focus{outline:2px solid #ff3b2f;outline-offset:1px;border-color:#ff3b2f}
+.timeline-advanced{margin-top:16px;background:#0b0f16}
+.timeline-advanced summary{font-size:13px;color:#c1cad8}
+.timeline-advanced .grid{margin-top:12px}
+@media(max-width:520px){
+  .timeline-event-fields{grid-template-columns:minmax(0,1fr)}
+  .timeline-event-fields .timeline-year-field,.timeline-event-fields label:nth-child(2),.timeline-event-fields label:nth-child(3),.timeline-event-fields .timeline-image-field,.timeline-event-fields textarea,.timeline-thumb{grid-column:1}
+  .timeline-actions button{flex:1 1 100%}
+}
