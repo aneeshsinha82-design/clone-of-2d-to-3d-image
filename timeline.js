@@ -263,7 +263,7 @@ export function drawTimeline(ctx, t, S) {
   const o = readOptions(), total = timelineDuration();
   ctx.save(); ctx.setTransform(S, 0, 0, S, 0, 0); ctx.globalAlpha = 1; ctx.filter = 'none';
   ctx.fillStyle = o.bg; ctx.fillRect(0, 0, W, H);
-  const horizontal = o.orientation === 'horizontal';
+  const horizontal = true; // Keep the timeline as one straight horizontal line; never form an L.
   const pad = Math.max(70, o.imageSize / 2 + 24);
   const lineX1 = horizontal ? pad : W / 2, lineY1 = horizontal ? H * .53 : pad;
   const lineX2 = horizontal ? W - pad : W / 2, lineY2 = horizontal ? H * .53 : H - pad;
