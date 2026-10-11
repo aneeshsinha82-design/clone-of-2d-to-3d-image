@@ -1,6 +1,7 @@
 import { cameraState, CAMERAS } from './camera.js';
 import { analyzeVoice, applyVoiceSync } from './sync.js';
 import {parseScript,buildTimeline} from './engine.js';
+import { W, H, setCanvasDimensions } from './util.js';
 import assert from 'node:assert';
 const imgs=[{name:'soldier'},{name:'walter, heisenberg'},{name:'Galaxy Planet'},{name:'unused'}];
 const p=parseScript("Getting good at *editing* [3] isn't easy.\n\nThe strongest soldier fights.\n\nHeisenberg [1] knocks.");
@@ -72,4 +73,13 @@ assert.equal(tl5.scenes[0].ghost,'?'); assert.equal(tl5.scenes[2].button,'Book N
   assert.equal(cameraState('off', 'whipup', 0, 1).dy, 0);
   assert.equal(parseScript("Big *SKILL* {giant:skill words}")[0].giant, 'skill words');
 }
-console.log('engine ok');
+// Export composition presets must switch logical canvas dimensions cleanly.
+setCanvasDimensions('portrait');
+assert.equal(W, 1080); assert.equal(H, 1920);
+setCanvasDimensions('landscape');
+assert.equal(W, 1920); assert.equal(H, 1080);
+setCanvasDimensions('square');
+assert.equal(W, 1080); assert.equal(H, 1080);
+setCanvasDimensions('portrait'); // restore the default for any later tests
+assert.equal(W, 1080); assert.equal(H, 1920);
+console.log('engine and canvas formats ok');
