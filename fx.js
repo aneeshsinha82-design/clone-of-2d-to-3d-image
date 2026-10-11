@@ -1,6 +1,6 @@
 import { W, H, clamp01, easeOutCubic, easeInOut, easeOutBack, rnd } from './util.js';
 
-export const TRANSITIONS = ['wipe', 'iris', 'stripes', 'glitch', 'curtain', 'diagonal', 'zoom', 'flash', 'slits', 'bands', 'ink', 'ribbon', 'dot', 'pixels', 'tilt', 'blurin'];
+export const TRANSITIONS = ['wipe', 'iris', 'stripes', 'glitch', 'curtain', 'diagonal', 'zoom', 'flash', 'slits', 'bands', 'ink', 'ribbon', 'dot', 'pixels', 'tilt', 'blurin', 'pageTurn'];
 export const TRANS_LEN = 0.5;
 
 /* ---------- camera-type transitions: change HOW the new scene is drawn ---------- */
@@ -99,6 +99,36 @@ export function drawTransition(ctx, th, sc, t, kind, si) {
         }
       }
     }
+    ctx.globalAlpha = 1;
+  } else if (kind === 'pageTurn') { // warm archive-paper sheet peels away to reveal the next scene
+    const p = easeOutCubic(clamp01(q));
+    const x = -W * p;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    const cw = cv.width, ch = cv.height, sx = x * cw / W;
+    const sw = cw;
+    ctx.fillStyle = '#e9dfca';
+    ctx.fillRect(sx, 0, sw, ch);
+    // Subtle aged-paper ruling and a soft inner vignette.
+    ctx.save();
+    ctx.beginPath(); ctx.rect(sx, 0, sw, ch); ctx.clip();
+    ctx.globalAlpha = 0.16; ctx.strokeStyle = '#9d8b6c'; ctx.lineWidth = Math.max(1, cw / 540);
+    for (let y = ch * 0.12; y < ch; y += ch * 0.075) {
+      ctx.beginPath(); ctx.moveTo(sx + sw * 0.06, y); ctx.lineTo(sx + sw * 0.94, y); ctx.stroke();
+    }
+    const shade = ctx.createLinearGradient(sx, 0, sx + sw, 0);
+    shade.addColorStop(0, 'rgba(70,48,25,0.18)');
+    shade.addColorStop(0.72, 'rgba(255,255,255,0)');
+    shade.addColorStop(1, 'rgba(65,45,25,0.08)');
+    ctx.globalAlpha = 1; ctx.fillStyle = shade; ctx.fillRect(sx, 0, sw, ch);
+    ctx.restore();
+    // Curled page edge and moving cast shadow.
+    const edgeX = sx + sw;
+    ctx.globalAlpha = 0.22 * (1 - p);
+    const fold = ctx.createLinearGradient(edgeX - cw * 0.045, 0, edgeX + cw * 0.015, 0);
+    fold.addColorStop(0, 'rgba(0,0,0,0)');
+    fold.addColorStop(0.55, 'rgba(0,0,0,0.7)');
+    fold.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = fold; ctx.fillRect(edgeX - cw * 0.045, 0, cw * 0.06, ch);
     ctx.globalAlpha = 1;
   } else if (kind === 'zoom') {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
