@@ -27,7 +27,11 @@ const getOpts = () => ({
   splash: $('splash').checked, reflect: $('reflect').checked, endStyle: $('endstyle').value, wrapper: $('wrapper').checked
 });
 const draw = (t, S) => {
-  if (drawTimeline(ctx, t, S)) return;
+  const timelineScene = state.tl?.scenes.find(sc => sc.timeline && t >= sc.start && t < sc.end);
+  if (timelineScene && timelineEnabled()) {
+    drawTimeline(ctx, t - timelineScene.start, S);
+    return;
+  }
   renderFrame(ctx, t, S, state.tl, getOpts());
 };
 // when paused at the very start, show a "poster" frame (first picture + first words) instead of a blank screen
@@ -126,12 +130,12 @@ function refresh() {
   const bo = { wpm: +$('wpm').value, autoFill: $('autofill').checked, outro: $('outro').checked };
   $('syncoffv').textContent = (+$('syncoff').value / 1000).toFixed(2) + ' s';
   if (state.marksFor !== $('script').value) state.marks = {};   // taps belong to one exact script
-  state.tl = buildTimeline(parseScript($('script').value), state.images, { ...bo, audioDur: smart ? 0 : aDur });
+  state.tl = buildTimeline(parseScript($('script').value), state.images, { ...bo, audioDur: smart ? 0 : aDur, timelineDuration: timelineEnabled() ? timelineDuration() : 4 });
   if (smart) {
     const ok = applyVoiceSync(state.tl, state.voice, { offset: +$('syncoff').value / 1000, marks: state.marks, audioDur: aDur });
     if (!ok) state.tl = buildTimeline(parseScript($('script').value), state.images, { ...bo, audioDur: aDur });
   }
-  if (timelineEnabled()) state.tl.total = timelineDuration();
+  
   curT = Math.min(curT, state.tl.total);
   const tl = $('tl'); tl.innerHTML = '';
   state.tl.scenes.forEach((sc, i) => {
