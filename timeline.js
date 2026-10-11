@@ -72,7 +72,7 @@ function renderEntries() {
       try { await img.decode(); } catch { URL.revokeObjectURL(url); status.textContent = 'Could not read image'; return; }
       if (ev.imageUrl) URL.revokeObjectURL(ev.imageUrl);
       ev.image = img; ev.imageUrl = url; status.textContent = f.name;
-      window.dispatchEvent(new Event('timelinechange'));
+      renderEntries(); window.dispatchEvent(new Event('timelinechange'));
     };
     imageWrap.append(file, status);
     grid.append(imageWrap);
@@ -92,7 +92,7 @@ function readOptions() {
     bg: val('timelineBgColor', '#050505'), gradientEnd: val('timelineGradientColor', '#00cfff'),
     gradient: checked('timelineGradient'), glowOn: checked('timelineGlow', true),
     lineWidth: Number(val('timelineLineWidth', 3)), glowStrength: Number(val('timelineGlowStrength', 12)),
-    imageSize: Number(val('timelineImageSize', 88)), fontSize: Number(val('timelineFontSize', 42)),
+    imageSize: Number(val('timelineImageSize', 88)), fontSize: Number(val('timelineFontSize', 42)), font: val('timelineFont', 'Inter'),
     duration: Math.max(.1, Number(val('timelineDuration', .7)) || .7),
     interval: Math.max(.2, Number(val('timelineInterval', 2.2)) || 2.2)
   };
@@ -126,7 +126,7 @@ export function initTimeline() {
     window.dispatchEvent(new Event('timelinechange'));
   });
   $('timelineReferencePalette')?.addEventListener('change', updatePaletteFromReference);
-  ['timelineEnabled','timelineOrientation','timelineLineColor','timelineGlowColor','timelineTextColor','timelineMarkerColor','timelineBgColor','timelineGradientColor','timelineGradient','timelineGlow','timelineLineWidth','timelineGlowStrength','timelineImageSize','timelineFontSize','timelineDuration','timelineInterval'].forEach(id => {
+  ['timelineEnabled','timelineOrientation','timelineLineColor','timelineGlowColor','timelineTextColor','timelineMarkerColor','timelineBgColor','timelineGradientColor','timelineGradient','timelineGlow','timelineLineWidth','timelineGlowStrength','timelineImageSize','timelineFontSize','timelineFont','timelineDuration','timelineInterval'].forEach(id => {
     $(id)?.addEventListener('input', () => window.dispatchEvent(new Event('timelinechange')));
     $(id)?.addEventListener('change', () => window.dispatchEvent(new Event('timelinechange')));
   });
@@ -179,12 +179,12 @@ export function drawTimeline(ctx, t, S) {
     const labelY = horizontal ? y - Math.max(45, o.imageSize * .65) : y - 18;
     const labelX = horizontal ? x : x + 42;
     ctx.save(); ctx.globalAlpha = p; ctx.fillStyle = o.text; ctx.textAlign = horizontal ? 'center' : 'left'; ctx.textBaseline = 'middle';
-    ctx.font = '700 ' + o.fontSize + 'px Inter, Arial, sans-serif';
+    ctx.font = '700 ' + o.fontSize + 'px ' + JSON.stringify(o.font) + ', Arial, sans-serif';
     ctx.shadowColor = o.glow; ctx.shadowBlur = o.glowOn ? 5 : 0;
     ctx.fillText(ev.date || 'Year', labelX, labelY, horizontal ? Math.max(80, (W - 2 * pad) / count) : W * .42);
-    ctx.shadowBlur = 0; ctx.font = '600 ' + Math.max(18, o.fontSize * .52) + 'px Inter, Arial, sans-serif';
+    ctx.shadowBlur = 0; ctx.font = '600 ' + Math.max(18, o.fontSize * .52) + 'px ' + JSON.stringify(o.font) + ', Arial, sans-serif';
     ctx.fillText(ev.title || '', labelX, labelY + o.fontSize * .82, horizontal ? Math.max(80, (W - 2 * pad) / count) : W * .42);
-    if (ev.description) { ctx.font = '400 ' + Math.max(14, o.fontSize * .32) + 'px Inter, Arial, sans-serif'; ctx.fillText(ev.description, labelX, labelY + o.fontSize * 1.42, horizontal ? Math.max(80, (W - 2 * pad) / count) : W * .42); }
+    if (ev.description) { ctx.font = '400 ' + Math.max(14, o.fontSize * .32) + 'px ' + JSON.stringify(o.font) + ', Arial, sans-serif'; ctx.fillText(ev.description, labelX, labelY + o.fontSize * 1.42, horizontal ? Math.max(80, (W - 2 * pad) / count) : W * .42); }
     ctx.restore();
     if (ev.image && size > 1) {
       const ix = horizontal ? x : x - size * .7 - 18, iy = horizontal ? y + size * .72 + 20 : y;
