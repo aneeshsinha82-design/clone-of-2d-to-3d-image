@@ -1,12 +1,12 @@
 # Script → Video
 
-Browser tool that turns a **text script + named pictures** into a vertical (9:16) motion-graphics video, exportable in HD (720p / 1080p / 2K). No server, no API keys: everything runs in the browser.
+Browser tool that turns a **text script + named pictures** into motion-graphics videos in Shorts/Reels (9:16), landscape (16:9), or square (1:1) formats. Export MP4 (H.264/AAC) or WebM at HD / Full HD / 2K resolutions. Encoding runs in the browser; MP4/WebM export loads the open-source Mediabunny encoder from a CDN on first use.
 
 ## How to use
 1. Write the script. A blank line (or `---`) starts a new scene.
 2. Add pictures (any number; PNG with transparent background looks best). Rename each one: the name is what the tool matches against the script.
 3. Optional: add a voice-over. **Voice sync** (Smart) listens to the audio, ignores silence at the start and end, follows the pauses between sentences and snaps scenes to them. Use **Fine-tune** to shift everything earlier/later, or **Tap to sync scenes** (press Space at the start of each scene while the voice plays) for exact scene starts.
-4. Pick styles (or leave everything on **Mix**), set your handle, press **Export HD video**.
+4. Choose **Shorts / Reels**, **Landscape**, or **Square**, select resolution and FPS, choose MP4 or WebM, then export.
 
 ## Script syntax
 | Syntax | Meaning |
@@ -25,7 +25,7 @@ Icons: gear, user, headset, chat, star, check, bolt, heart, clock, 24/7, hand, m
 
 ## Reference-video style (camera moves, hard cuts, ladder text)
 Pick **Quick style preset → Reference video** to switch everything on at once, or choose the parts separately. The curves were measured frame by frame from a reference video.
-- **Camera movement** (moves the whole scene): rise & settle from below · zoom-up settle (75 % → 100 %) · slide in from the right · slide in + constant drift
+- **Camera movement** (moves the whole scene): rise & settle from below · zoom-up settle (75 % → 100 %) · slide in from the right · cinematic push-in / pull-out · pan left / right · subtle handheld · orbit
 - **Scene exit motion** (last fraction of a second): whip up and out · slide out to the right · zoom hugely into the cut
 - **Transition: None (hard cut)** is the reference look: the motion above does the work
 - **Text layout "Ladder":** small lead-in words, then bigger words · **Text animations:** rise from behind a mask line (grey → full colour), fade + focus pull
@@ -38,7 +38,7 @@ Pick **Quick style preset → Reference video** to switch everything on at once,
 - **Text animation (15):** rise, typewriter, letter by letter, blur in, zoom, slide, bounce, spin, glitch, wavy letters, flip, scramble decode, stretch, mask-line rise, focus pull
 - **Text exit:** blur out, fade out, float up
 - **Scene transitions (15):** colour wipe, circle iris, stripes, glitch, curtain, diagonal slash, zoom punch, flash, vertical slits, horizontal bands, ink flood, ribbon sweep, corner circle, tilt-in camera, blur-in (or a hard cut)
-- **Picture entrances (17):** pop, slide up, spin, fly from left / right, drop + bounce, zoom, flip, swing, hanging lamp swing, fly + snap, rise, from the corner, blur to focus, grow from 75 %, long rise, drift
+- **Picture entrances (17):** pop, slide up, spin, fly from left / right, drop + bounce, zoom, flip, swing, hanging lamp swing, fly + snap, rise, from the corner, blur to focus, grow from 75 %, long rise
 - **Picture style:** cut-out, white card, polaroid, gold frame, yellow glow outline; position centre or alternating
 - **Backdrop:** accent circle, green circle behind head, big corner circles
 - **Decorations:** tech (graph-paper grid with crosshairs, side micro text, HD/4K badges, glitching barcode) or minimal
@@ -48,12 +48,12 @@ Pick **Quick style preset → Reference video** to switch everything on at once,
 
 ## Run / deploy
 Static files only. Open via any web server (`python3 -m http.server`) or GitHub Pages.
-Use **Chrome or Edge** for MP4 export (other browsers may give WebM). Export renders in real time: keep the tab open and visible. If the export looks choppy, choose 720p or 30 fps.
+MP4 uses Mediabunny with browser WebCodecs (H.264 video + AAC audio); the browser must support those encoders. An internet connection is needed to load the pinned encoder module the first time. WebM uses VP9/Opus. Export renders frames in the browser; keep the tab open. High-resolution 60 FPS exports use more memory, so choose 720p or 30 FPS if your device struggles.
 
 ## Files
 - `engine.js` – script parser, picture matching, timeline (pure logic; `node test.mjs`)
 - `sync.js` – voice analysis and script-to-voice alignment (pure logic, tested)
-- `util.js` – shared constants and easing functions
+- `util.js` – dynamic aspect-ratio dimensions and easing functions
 - `themes.js` – colour themes and font sets
 - `text.js` – text layouts, 13 animations, exit animations
 - `pictures.js` – picture entrances and picture styles
