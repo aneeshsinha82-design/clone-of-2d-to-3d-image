@@ -226,9 +226,8 @@ export function drawTimelineOverlay(ctx, t, S, dateText) {
   ctx.globalAlpha = 1; ctx.filter = 'none';
   const panelY = H * .70, panelH = H * .27;
   const p = easeOutCubic(Math.max(0, Math.min(1, t / Math.max(.1, o.duration))));
-  // Semi-transparent panel keeps the original scene visible behind the overlay.
-  ctx.fillStyle = 'rgba(0,0,0,0.76)';
-  ctx.beginPath(); ctx.roundRect(W * .06, panelY, W * .88, panelH, 28); ctx.fill();
+  // Keep the overlay floating over the scene: no filled panel or black box.
+  // A light text shadow and the timeline line provide contrast without hiding the video.
   const x1 = W * .13, x2 = W * .87, y = panelY + panelH * .37;
   drawGlowLine(ctx, x1, y, x1 + (x2 - x1) * p, y, o, p);
   ctx.save();
