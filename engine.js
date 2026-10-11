@@ -31,7 +31,7 @@ export function parseScript(src) {
   const scenes = prepared.split(/\n\s*\n|^\s*---+\s*$/m).map(s => s.trim()).filter(Boolean);
   return scenes.map(txt => {
     const words = [];
-    let pending = null, ghost = null, giant = null, icons = null, button = null;
+    let pending = null, ghost = null, giant = null, icons = null, button = null, timeline = false;
     for (let tok of txt.split(/\s+/)) {
       let m;
       while (true) {
@@ -39,7 +39,8 @@ export function parseScript(src) {
         else if ((m = tok.match(/^\(\(([^)]+)\)\)/))) { button = m[1].replace(/_/g, ' '); tok = tok.slice(m[0].length); }
         else if ((m = tok.match(/^\{([^}]+)\}/))) {
           const v = m[1];
-          if (/^giant:/i.test(v)) giant = v.slice(6).replace(/_/g, ' ');
+          if (/^timeline$/i.test(v)) timeline = true;
+          else if (/^giant:/i.test(v)) giant = v.slice(6).replace(/_/g, ' ');
           else if (/^icons:/i.test(v)) icons = v.slice(6).split(',').map(x => x.trim().toLowerCase().replace(/[^a-z0-9]/g, '')).filter(Boolean);
           else ghost = v.replace(/_/g, ' ');
           tok = tok.slice(m[0].length);
@@ -52,7 +53,9 @@ export function parseScript(src) {
       words.push({ text: tok, emph, tag: pending });
       pending = null;
     }
-    return { words, ghost, giant, icons, button };
+    const isTimeline = timeline && !words.length;
+    if (isTimeline) words.push({ text: 'TIMELINE', emph: false, tag: null, timelineMarker: true });
+    return { words, ghost, giant, icons, button, timeline: isTimeline };
   }).filter(s => s.words.length);
 }
 
@@ -88,6 +91,14 @@ export function buildTimeline(parsed, images, o = {}) {
 
   parsed.forEach(sc => {
     const start = t, evs = [];
+    if (sc.timeline) {
+      const dur = Math.max(1, Number(o.timelineDuration) || 4);
+      const word = { ...sc.words[0], t, dur, gi: gi++ };
+      t += dur;
+      scenes.push({ start, end: t, words: [word], phrases: [{ idx: [0], start, end: t }], ghost: null, giant: null, icons: null, button: null, timeline: true });
+      rawEvents.push(evs);
+      return;
+    }
     const words = sc.words.map((w, i) => {
       const len = Math.min(w.text.replace(/[^\p{L}\p{N}]/gu, '').length, 12);
       let dur = base * (0.7 + len / 12 * 0.6);

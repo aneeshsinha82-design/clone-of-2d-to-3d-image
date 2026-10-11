@@ -22,8 +22,8 @@
     <h2>Timeline Animation <small>(separate tool for chronological scripts)</small></h2>
     <details id="timelinePanel" open>
       <summary>Timeline Animation — create a timeline video</summary>
-      <p class="hint timeline-help">Quick start: type a year and event title below. Add more events as needed, then enable the timeline and press Play to preview.</p>
-      <label class="chk timeline-enable"><input id="timelineEnabled" type="checkbox"> Enable Timeline Animation in preview and export</label>
+      <p class="hint timeline-help">Quick start: type your events below, then add <code>{timeline}</code> on its own line in the Script exactly where the timeline should appear. The timeline plays only at that point; text before and after keeps its order.</p>
+      <label class="chk timeline-enable"><input id="timelineEnabled" type="checkbox"> Enable timeline rendering at the {timeline} script marker</label>
 
       <div class="timeline-actions">
         <button id="timelineAdd" type="button" class="timeline-add">＋ Add event</button>
@@ -58,7 +58,7 @@
           <label class="chk"><input id="timelineReferencePalette" type="checkbox"> Suggest colours from reference image</label>
         </div>
       </details>
-      <p class="hint">Tip: each event has a year/date, title, optional description, and optional image. Use the arrows to reorder events.</p>
+      <p class="hint">Example script: <code>Our story begins</code>, blank line, <code>{timeline}</code>, blank line, <code>And the story continues</code>. The timeline section gets its own duration based on your events; all surrounding text stays before or after it in chronological order.</p>
     </details>
 
     <h2>3 · Voice-over <small>(optional)</small></h2>
