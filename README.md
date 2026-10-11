@@ -64,3 +64,12 @@ Use **Chrome or Edge** for MP4 export (other browsers may give WebM). Export ren
 - `draw.js` – renders each frame (puts everything together)
 - `app.js` – UI, playback, audio, export
 - `index.html`, `style.css`, `package.json`
+
+
+## Open-source learning
+
+A curated guide of **100 public GitHub repositories** for studying camera movement, kinetic typography, text effects, transitions, Canvas/WebGL rendering, and motion design:
+
+- [Open-source motion learning guide — 100 repositories](./OPEN_SOURCE_MOTION_LEARNING_GUIDE.md)
+
+These are reference links. Check each project's license before reusing code or assets. The original `2d-image-to-3d` repository is not modified by this project.
