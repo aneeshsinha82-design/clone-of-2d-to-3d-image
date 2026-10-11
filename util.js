@@ -1,4 +1,11 @@
-export const W = 1080, H = 1920;
+// Logical canvas dimensions follow the selected export composition.
+export let W = 1080, H = 1920;
+export function setCanvasDimensions(aspect = 'portrait') {
+  if (aspect === 'landscape') { W = 1920; H = 1080; }
+  else if (aspect === 'square') { W = 1080; H = 1080; }
+  else { W = 1080; H = 1920; }
+  return { width: W, height: H };
+}
 export const clamp01 = x => Math.max(0, Math.min(1, x));
 export const easeOutCubic = x => 1 - Math.pow(1 - x, 3);
 export const easeInOut = x => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
