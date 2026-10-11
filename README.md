@@ -37,7 +37,7 @@ Pick **Quick style preset → Reference video** to switch everything on at once,
 - **Text font style:** Agency bold, Editorial mix, Bold poster, Elegant serif, Handwritten script, Tech mono
 - **Text animation (15):** rise, typewriter, letter by letter, blur in, zoom, slide, bounce, spin, glitch, wavy letters, flip, scramble decode, stretch, mask-line rise, focus pull
 - **Text exit:** blur out, fade out, float up
-- **Scene transitions (15):** colour wipe, circle iris, stripes, glitch, curtain, diagonal slash, zoom punch, flash, vertical slits, horizontal bands, ink flood, ribbon sweep, corner circle, tilt-in camera, blur-in (or a hard cut)
+- **Scene transitions (16):** colour wipe, circle iris, stripes, glitch, curtain, diagonal slash, zoom punch, flash, vertical slits, horizontal bands, ink flood, ribbon sweep, corner circle, tilt-in camera, blur-in (or a hard cut)
 - **Picture entrances (17):** pop, slide up, spin, fly from left / right, drop + bounce, zoom, flip, swing, hanging lamp swing, fly + snap, rise, from the corner, blur to focus, grow from 75 %, long rise
 - **Picture style:** cut-out, white card, polaroid, gold frame, yellow glow outline; position centre or alternating
 - **Backdrop:** accent circle, green circle behind head, big corner circles
