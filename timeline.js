@@ -216,7 +216,7 @@ function drawCircularImage(ctx, img, x, y, size, progress, border) {
 export function drawTimelineOverlay(ctx, t, S, dateText) {
   if (!timelineEnabled()) return false;
   const o = readOptions();
-  const normalise = value => String(value || '').replace(/\\s+/g, '').toUpperCase();
+  const normalise = value => String(value || '').replace(/\s+/g, '').toUpperCase();
   const ev = events.find(item => normalise(item.date) === normalise(dateText))
     || events.find(item => normalise(item.date).startsWith(normalise(dateText)))
     || events.find(item => normalise(dateText).startsWith(normalise(item.date)));
