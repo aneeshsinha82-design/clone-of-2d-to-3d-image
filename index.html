@@ -73,7 +73,9 @@
       <label class="chk"><input type="checkbox" id="outro" checked> End card</label>
       <label>End card style <select id="endstyle"><option value="dim" selected>Dimmed last scene + logo</option><option value="black">Black + handle</option></select></label>
       <label class="chk"><input type="checkbox" id="sfx" checked> Whoosh sound effects (also exported)</label>
-      <label>Export <select id="res"><option value="720">HD 720×1280</option><option value="1080" selected>Full HD 1080×1920</option><option value="1440">2K 1440×2560</option></select></label>
+      <label>Video format <select id="aspect"><option value="portrait" selected>Shorts / Reels / TikTok (9:16)</option><option value="landscape">Landscape (16:9)</option><option value="square">Square (1:1)</option></select></label>
+      <label>Resolution <select id="res"><option value="720">HD 720p</option><option value="1080" selected>Full HD 1080p</option><option value="1440">2K / 1440p</option></select></label>
+      <label>File type <select id="format"><option value="mp4" selected>MP4 (H.264 + AAC)</option><option value="webm">WebM (VP9 + Opus)</option></select></label>
       <label>FPS <select id="fps"><option>30</option><option>60</option></select></label>
     </div></details>
   </section>
@@ -84,7 +86,7 @@
       <button id="play">▶ Play</button>
       <input id="seek" type="range" min="0" max="1000" value="0"><span id="time">0:00 / 0:00</span>
     </div>
-    <button id="export" class="primary">⬇ Export HD video</button>
+    <button id="export" class="primary">⬇ Export MP4</button>
     <div id="expstat" class="hint"></div>
     <h2>Timeline</h2>
     <div id="tl"></div>
