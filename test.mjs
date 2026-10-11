@@ -1,4 +1,4 @@
-import { cameraState } from './camera.js';
+import { cameraState, CAMERAS } from './camera.js';
 import { analyzeVoice, applyVoiceSync } from './sync.js';
 import {parseScript,buildTimeline} from './engine.js';
 import assert from 'node:assert';
@@ -58,7 +58,13 @@ assert.equal(tl5.scenes[0].ghost,'?'); assert.equal(tl5.scenes[2].button,'Book N
   near(cameraState('riseup', 'none', 0.4, 9).dy / 3, 106, 6, 'rise at 0.4s');
   near(cameraState('riseup', 'none', 0.8, 9).dy / 3, 34, 5, 'rise at 0.8s');
   near(cameraState('slidein', 'none', 0.3, 9).dx / 3.008, 36, 6, 'slide in at 0.3s');
-  near(cameraState('drift', 'none', 1.0, 9).dx / 3.008, 30, 6, 'drift at 1.0s');
+  assert(!CAMERAS.includes('drift'), 'removed drift option stays out of camera mix');
+  assert(cameraState('pushin', 'none', 2, 9).s > 1, 'push-in zooms in');
+  assert(cameraState('pullout', 'none', 2, 9).s < 1.14, 'pull-out zooms out');
+  assert(cameraState('panleft', 'none', 1, 9).dx < 0, 'pan left moves left');
+  assert(cameraState('panright', 'none', 1, 9).dx > 0, 'pan right moves right');
+  assert(cameraState('handheld', 'none', 1, 9).s > 1, 'handheld adds subtle motion');
+  assert(cameraState('orbit', 'none', 1, 9).s > 1, 'orbit camera has a cinematic scale');
   near(cameraState('settle', 'none', 0.2, 9).s, 0.85, 0.03, 'settle at 0.2s');
   assert.equal(cameraState('off', 'none', 0.3, 9).dy, 0);
   assert(cameraState('off', 'zoompush', 0, 0).s > 2.5, 'zoom push reaches 2.6x at the cut');
