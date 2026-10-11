@@ -132,7 +132,7 @@ export function initTimeline() {
     $('timelineReferencePreview').textContent = 'Imported ' + years.length + ' unique year(s). Review titles and upload event images.';
   });
   $('timelineAdd')?.addEventListener('click', () => { events.push(makeEvent({ date: String(new Date().getFullYear()), title: 'New event' })); renderEntries(); window.dispatchEvent(new Event('timelinechange')); });
-  $('timelineClear')?.addEventListener('click', () => { events.forEach(ev => ev.imageUrl && URL.revokeObjectURL(ev.imageUrl)); events.splice(0); renderEntries(); window.dispatchEvent(new Event('timelinechange')); });
+  $('timelineClear')?.addEventListener('click', () => { events.forEach(ev => ev.imageUrl && URL.revokeObjectURL(ev.imageUrl)); events.splice(0); events.push(makeEvent()); renderEntries(); window.dispatchEvent(new Event('timelinechange')); });
   $('timelineReference')?.addEventListener('change', async e => {
     const f = e.target.files?.[0]; if (!f) return;
     const url = URL.createObjectURL(f), img = new Image(); img.src = url;
