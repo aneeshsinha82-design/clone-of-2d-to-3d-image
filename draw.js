@@ -44,12 +44,12 @@ function sceneIndex(tl, t) {
   return si;
 }
 const themeFor = (o, si) => (o.theme === 'alternate' ? THEMES[ALTERNATE[Math.max(si, 0) % 2]] : (THEMES[o.theme] || THEMES.editorial));
+const ARCHIVE_TRANSITIONS = ['pageTurn', 'newspaper', 'archiveZoom', 'filmBurn', 'paperTear', 'zoom', 'blurin', 'wipe', 'flash'];
 
 function drawScene(ctx, t, S, tl, o) {
   ctx.setTransform(S, 0, 0, S, 0, 0);
   ctx.globalAlpha = 1; ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; ctx.filter = 'none'; ctx.setLineDash([]);
   const si = sceneIndex(tl, t), sc = si >= 0 ? tl.scenes[si] : null, th = themeFor(o, si);
-  const ARCHIVE_TRANSITIONS = ['pageTurn', 'newspaper', 'archiveZoom', 'filmBurn', 'paperTear', 'zoom', 'blurin', 'wipe', 'flash'];
   const tkind = sc && si > 0 && o.trans && o.trans !== 'none' ? (o.trans === 'archiveMix' ? ARCHIVE_TRANSITIONS[(si - 1) % ARCHIVE_TRANSITIONS.length] : o.trans === 'mix' ? TRANSITIONS[(si - 1) % TRANSITIONS.length] : o.trans) : 'none';
   const tq = sc ? (t - sc.start) / TRANS_LEN : 1;
 
