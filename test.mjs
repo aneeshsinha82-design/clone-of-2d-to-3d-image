@@ -3,9 +3,17 @@ import { analyzeVoice, applyVoiceSync } from './sync.js';
 import {parseScript,buildTimeline} from './engine.js';
 import { W, H, setCanvasDimensions } from './util.js';
 import { ARCHIVE_ENTRANCES, entranceParams } from './pictures.js';
-import { TRANSITIONS } from './fx.js';
+import { TRANSITIONS, cinematicPushState } from './fx.js';
 import { linkedTransitionFor } from './draw.js';
 import assert from 'node:assert';
+
+const pushStart = cinematicPushState(2, { start: 2, end: 6 });
+const pushEnd = cinematicPushState(6, { start: 2, end: 6 });
+assert(Math.abs(pushStart.scale - 1.035) < 1e-6);
+assert(pushEnd.scale > pushStart.scale);
+assert(Math.abs(pushEnd.scale - 1.11) < 1e-6);
+assert.equal(pushStart.sweep, 1);
+assert.equal(pushEnd.sweep, 0);
 const imgs=[{name:'soldier'},{name:'walter, heisenberg'},{name:'Galaxy Planet'},{name:'unused'}];
 const p=parseScript("Getting good at *editing* [3] isn't easy.\n\nThe strongest soldier fights.\n\nHeisenberg [1] knocks.");
 assert.equal(p.length,3);
