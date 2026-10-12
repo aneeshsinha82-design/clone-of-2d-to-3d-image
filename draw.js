@@ -211,7 +211,7 @@ function renderDesign(ctx, t, S, tl, o) {
     return;
   }
   const si = sceneIndex(tl, t), sc = si >= 0 ? tl.scenes[si] : null;
-  if (o.linkMotionTransition && sc && si > 0 && t >= sc.start && t < sc.start + TRANS_LEN) {
+  if (o.linkMotionTransition && sc && si > 0 && linkedTransitionFor(cameraFor(o.camera, si)) !== 'none' && t >= sc.start && t < sc.start + TRANS_LEN) {
     drawLinkedTransition(ctx, t, S, tl, o, si);
     return;
   }
