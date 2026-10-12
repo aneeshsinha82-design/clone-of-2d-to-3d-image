@@ -106,7 +106,7 @@ assert(TRANSITIONS.includes('paperTear'));
   const history = parseScript('[war-photo] In 1914 the war begins.\n\n[peace-photo] In 1918 the war ends.');
   const historyTl = buildTimeline(history, [{ name: 'war-photo' }, { name: 'peace-photo' }], {});
   assert.deepEqual(historyTl.events.map(e => [e.scene, e.img.name]), [[0, 'war-photo'], [1, 'peace-photo']]);
-  assert.deepEqual(historyTl.scenes.map(scene => scene.words.find(w => /\\d{3,4}/.test(w.text))?.text), ['1914', '1918']);
+  assert.deepEqual(historyTl.scenes.map(scene => scene.words.find(w => /\d{3,4}/.test(w.text))?.text), ['1914', '1918']);
 }
 console.log('archival motion, transitions, year tokens and image-to-scene matching ok');
 console.log('engine and canvas formats ok');
