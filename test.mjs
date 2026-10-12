@@ -4,6 +4,7 @@ import {parseScript,buildTimeline} from './engine.js';
 import { W, H, setCanvasDimensions } from './util.js';
 import { ARCHIVE_ENTRANCES, entranceParams } from './pictures.js';
 import { TRANSITIONS } from './fx.js';
+import { linkedTransitionFor } from './draw.js';
 import assert from 'node:assert';
 const imgs=[{name:'soldier'},{name:'walter, heisenberg'},{name:'Galaxy Planet'},{name:'unused'}];
 const p=parseScript("Getting good at *editing* [3] isn't easy.\n\nThe strongest soldier fights.\n\nHeisenberg [1] knocks.");
@@ -101,6 +102,10 @@ assert(TRANSITIONS.includes('newspaper'));
 assert(TRANSITIONS.includes('archiveZoom'));
 assert(TRANSITIONS.includes('filmBurn'));
 assert(TRANSITIONS.includes('paperTear'));
+assert.equal(linkedTransitionFor('pushin'), 'zoom');
+assert.equal(linkedTransitionFor('panright'), 'diagonal');
+assert.equal(linkedTransitionFor('riseup'), 'bands');
+assert.equal(linkedTransitionFor('off'), 'none');
 // A dated history script keeps each explicitly tagged archival picture tied to its scene.
 {
   const history = parseScript('[war-photo] In 1914 the war begins.\n\n[peace-photo] In 1918 the war ends.');
