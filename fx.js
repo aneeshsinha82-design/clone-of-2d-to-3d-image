@@ -3,6 +3,18 @@ import { W, H, clamp01, easeOutCubic, easeInOut, easeOutBack, rnd } from './util
 export const TRANSITIONS = ['wipe', 'iris', 'stripes', 'glitch', 'curtain', 'diagonal', 'zoom', 'flash', 'slits', 'bands', 'ink', 'ribbon', 'dot', 'pixels', 'tilt', 'blurin', 'pageTurn', 'archiveZoom', 'filmBurn', 'paperTear', 'newspaper'];
 export const TRANS_LEN = 0.5;
 
+/* Standalone Cinematic Push finishing pass. Kept separate from camera and transition choices. */
+export function cinematicPushState(t, sc) {
+  if (!sc) return { scale: 1, sweep: 0 };
+  const age = Math.max(0, t - sc.start);
+  const duration = Math.max(0.35, Math.min(1.25, (sc.end - sc.start) * 0.65));
+  const push = easeOutCubic(clamp01(age / duration));
+  return {
+    scale: 1.035 + 0.075 * push,
+    sweep: Math.pow(1 - clamp01(age / 0.42), 1.5)
+  };
+}
+
 /* ---------- camera-type transitions: change HOW the new scene is drawn ---------- */
 export function cameraPre(ctx, kind, q) {
   if (kind === 'tilt') {
