@@ -1,6 +1,7 @@
 import { W, clamp01, easeOutCubic, easeOutBack, bounce } from './util.js';
 
 export const ENTRANCES = ['pop', 'slide', 'spin', 'left', 'right', 'drop', 'zoom', 'flip', 'swing', 'pendulum', 'snap', 'rise', 'corner', 'focus', 'settle', 'longrise', 'drift'];
+export const ARCHIVE_ENTRANCES = ['settle', 'longrise', 'focus', 'drift', 'zoom', 'rise'];
 
 export function entranceParams(kind, p, age) {
   const a = { pop: 1, alpha: Math.min(age / 0.22, 1), rot: 0, kb: 1 + 0.035 * Math.min(age / 6, 1), dx: 0, dy: 0, sm: 1, sx: 1, blur: 0, pivot: false };
