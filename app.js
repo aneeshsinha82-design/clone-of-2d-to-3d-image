@@ -24,7 +24,7 @@ const fmt = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2,
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 const getOpts = () => ({
   theme: $('theme').value, handle: $('handle').value.trim(), handleIcon: $('handleIcon').value, picStyle: $('picstyle').value, picPos: $('picpos').value,
-  entrance: $('entrance').value, trans: $('trans').value, camera: $('camera').value, cameraSpeed: +$('cameraSpeed').value / 100, camexit: $('camexit').value, textAnim: $('textanim').value, textExit: $('textexit').value,
+  entrance: $('entrance').value, trans: $('trans').value, camera: $('camera').value, cameraSpeed: +$('cameraSpeed').value / 100, camexit: $('camexit').value, linkMotionTransition: $('linkMotionTransition').checked, textAnim: $('textanim').value, textExit: $('textexit').value,
   layout: $('layout').value, fontSet: $('fontset').value, deco: $('deco').value, backdrop: $('backdrop').value,
   splash: $('splash').checked, reflect: $('reflect').checked, endStyle: $('endstyle').value, wrapper: $('wrapper').checked
 });
