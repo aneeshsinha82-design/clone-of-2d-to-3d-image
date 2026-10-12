@@ -1,7 +1,7 @@
 import { W, H, clamp01, easeOutCubic } from './util.js';
 import { THEMES, ALTERNATE } from './themes.js';
 import { ENTRANCES, ARCHIVE_ENTRANCES, entranceParams, drawPicture } from './pictures.js';
-import { TRANSITIONS, TRANS_LEN, cameraPre, drawTransition, drawDeco, drawGhost, drawGiant, drawInk, drawBackdrop } from './fx.js';
+import { TRANSITIONS, TRANS_LEN, cameraPre, drawTransition, drawDeco, drawGhost, drawGiant, drawInk, drawBackdrop, cinematicPushState } from './fx.js';
 import { CAMERAS, EXITS, cameraFor, exitFor, cameraState, applyCamera } from './camera.js';
 import { drawText, TEXT_ANIMS, LAYOUTS } from './text.js';
 import { drawOrbit, drawButton } from './icons.js';
@@ -134,7 +134,103 @@ function renderDesign(ctx, t, S, tl, o) {
   drawScene(ctx, t, S, tl, o);
 }
 
+const cinematicBuffers = new WeakMap();
+
+function drawCinematicPush(ctx, t, tl) {
+  const target = ctx.canvas;
+  const w = target.width, h = target.height;
+  if (!w || !h || !target.ownerDocument) return false;
+  let buffer = cinematicBuffers.get(target);
+  if (!buffer) {
+    const canvas = target.ownerDocument.createElement('canvas');
+    buffer = { canvas, ctx: canvas.getContext('2d') };
+    if (!buffer.ctx) return false;
+    cinematicBuffers.set(target, buffer);
+  }
+  if (buffer.canvas.width !== w || buffer.canvas.height !== h) {
+    buffer.canvas.width = w;
+    buffer.canvas.height = h;
+  }
+  const sc = tl?.scenes?.find(scene => t >= scene.start && t < scene.end);
+  const state = cinematicPushState(t, sc);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalAlpha = 1; ctx.filter = 'none'; ctx.globalCompositeOperation = 'source-over';
+  ctx.clearRect(0, 0, w, h);
+  const x = (w - w * state.scale) / 2;
+  const y = (h - h * state.scale) / 2;
+  ctx.drawImage(buffer.canvas, x, y, w * state.scale, h * state.scale);
+
+  // Soft edge vignette gives the push a cinematic lens finish without changing the theme.
+  const radius = Math.max(w, h) * 0.72;
+  const vignette = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.16, w / 2, h / 2, radius);
+  vignette.addColorStop(0, 'rgba(0,0,0,0)');
+  vignette.addColorStop(0.64, 'rgba(0,0,0,0.045)');
+  vignette.addColorStop(1, 'rgba(0,0,0,0.24)');
+  ctx.fillStyle = vignette; ctx.fillRect(0, 0, w, h);
+
+  // A short diagonal anamorphic light sweep sells the forward motion at each scene entrance.
+  if (state.sweep > 0.001) {
+    const progress = 1 - state.sweep ** (1 / 1.5);
+    const sx = -w * 0.28 + progress * w * 1.7;
+    const beam = ctx.createLinearGradient(sx - w * 0.12, 0, sx + w * 0.12, h);
+    beam.addColorStop(0, 'rgba(255,255,255,0)');
+    beam.addColorStop(0.48, `rgba(190,220,255,${0.14 * state.sweep})`);
+    beam.addColorStop(0.52, `rgba(255,255,255,${0.20 * state.sweep})`);
+    beam.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = beam;
+    ctx.beginPath();
+    ctx.moveTo(sx - w * 0.06, 0); ctx.lineTo(sx + w * 0.06, 0);
+    ctx.lineTo(sx - w * 0.20, h); ctx.lineTo(sx - w * 0.32, h);
+    ctx.closePath(); ctx.fill();
+  }
+  // Preserve the transform expected by the editor's timeline overlays.
+  ctx.setTransform(S, 0, 0, S, 0, 0);
+  ctx.filter = 'none'; ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  return true;
+}
+
 export function renderFrame(ctx, t, S, tl, o) {
-  if (o.wrapper) renderShowcase(ctx, t, S, tl, (g, s) => renderDesign(g, t, s, tl, o));
-  else renderDesign(ctx, t, S, tl, o);
+  if (o.motionPreset !== 'cinematicPush') {
+    if (o.wrapper) renderShowcase(ctx, t, S, tl, (g, s) => renderDesign(g, t, s, tl, o));
+    else renderDesign(ctx, t, S, tl, o);
+    return;
+  }
+
+  const target = ctx.canvas;
+  const doc = target?.ownerDocument;
+  if (!doc || !target.width || !target.height) {
+    if (o.wrapper) renderShowcase(ctx, t, S, tl, (g, s) => renderDesign(g, t, s, tl, o));
+    else renderDesign(ctx, t, S, tl, o);
+    return;
+  }
+  let buffer = cinematicBuffers.get(target);
+  if (!buffer) {
+    const canvas = doc.createElement('canvas');
+    buffer = { canvas, ctx: canvas.getContext('2d') };
+    if (!buffer.ctx) {
+      if (o.wrapper) renderShowcase(ctx, t, S, tl, (g, s) => renderDesign(g, t, s, tl, o));
+      else renderDesign(ctx, t, S, tl, o);
+      return;
+    }
+    cinematicBuffers.set(target, buffer);
+  }
+  if (buffer.canvas.width !== target.width || buffer.canvas.height !== target.height) {
+    buffer.canvas.width = target.width;
+    buffer.canvas.height = target.height;
+  }
+  buffer.ctx.setTransform(1, 0, 0, 1, 0, 0);
+  buffer.ctx.globalAlpha = 1; buffer.ctx.filter = 'none'; buffer.ctx.clearRect(0, 0, buffer.canvas.width, buffer.canvas.height);
+  if (o.wrapper) renderShowcase(buffer.ctx, t, S, tl, (g, s) => renderDesign(g, t, s, tl, o));
+  else renderDesign(buffer.ctx, t, S, tl, o);
+
+  // The standalone effect is composited after the full existing frame, so it never rewrites
+  // camera, transition, picture, typography, theme, or quick-style settings.
+  if (tl?.hasOutro && t >= tl.outroStart) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, target.width, target.height);
+    ctx.drawImage(buffer.canvas, 0, 0);
+    ctx.setTransform(S, 0, 0, S, 0, 0);
+    return;
+  }
+  drawCinematicPush(ctx, t, tl);
 }
