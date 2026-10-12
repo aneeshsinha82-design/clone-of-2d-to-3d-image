@@ -136,7 +136,7 @@ function renderDesign(ctx, t, S, tl, o) {
 
 const cinematicBuffers = new WeakMap();
 
-function drawCinematicPush(ctx, t, tl) {
+function drawCinematicPush(ctx, t, tl, S) {
   const target = ctx.canvas;
   const w = target.width, h = target.height;
   if (!w || !h || !target.ownerDocument) return false;
@@ -232,5 +232,5 @@ export function renderFrame(ctx, t, S, tl, o) {
     ctx.setTransform(S, 0, 0, S, 0, 0);
     return;
   }
-  drawCinematicPush(ctx, t, tl);
+  drawCinematicPush(ctx, t, tl, S);
 }
