@@ -196,7 +196,7 @@ function refresh() {
   draw(shownT(), cv.width / W); updateTime();
 }
 window.addEventListener('timelinechange', refresh);
-['script', 'wpm', 'autofill', 'outro', 'theme', 'handle', 'handleIcon', 'picstyle', 'picpos', 'entrance', 'trans', 'textanim', 'textexit', 'layout', 'fontset', 'deco', 'backdrop', 'splash', 'reflect', 'endstyle', 'wrapper', 'sfx', 'syncmode', 'syncoff', 'camera', 'cameraSpeed', 'camexit'].forEach(id => {
+['script', 'wpm', 'autofill', 'outro', 'theme', 'handle', 'handleIcon', 'picstyle', 'picpos', 'entrance', 'trans', 'textanim', 'textexit', 'layout', 'fontset', 'deco', 'backdrop', 'splash', 'reflect', 'endstyle', 'wrapper', 'sfx', 'syncmode', 'syncoff', 'camera', 'cameraSpeed', 'camexit', 'linkMotionTransition'].forEach(id => {
   $(id).addEventListener('input', refresh); $(id).addEventListener('change', refresh);
 });
 $('aspect').addEventListener('change', () => { applyAspect(); refresh(); });
