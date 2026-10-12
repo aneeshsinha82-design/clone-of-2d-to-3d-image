@@ -26,7 +26,7 @@ const getOpts = () => ({
   theme: $('theme').value, handle: $('handle').value.trim(), handleIcon: $('handleIcon').value, picStyle: $('picstyle').value, picPos: $('picpos').value,
   entrance: $('entrance').value, trans: $('trans').value, camera: $('camera').value, cameraSpeed: +$('cameraSpeed').value / 100, camexit: $('camexit').value, linkMotionTransition: $('linkMotionTransition').checked, textAnim: $('textanim').value, textExit: $('textexit').value,
   layout: $('layout').value, fontSet: $('fontset').value, deco: $('deco').value, backdrop: $('backdrop').value,
-  splash: $('splash').checked, reflect: $('reflect').checked, endStyle: $('endstyle').value, wrapper: $('wrapper').checked
+  splash: $('splash').checked, reflect: $('reflect').checked, endStyle: $('endstyle').value, wrapper: $('wrapper').checked, motionPreset: $('motionPreset').value
 });
 const draw = (t, S) => {
   // Keep the normal script scene visible. When a scene contains a year/date,
@@ -196,7 +196,7 @@ function refresh() {
   draw(shownT(), cv.width / W); updateTime();
 }
 window.addEventListener('timelinechange', refresh);
-['script', 'wpm', 'autofill', 'outro', 'theme', 'handle', 'handleIcon', 'picstyle', 'picpos', 'entrance', 'trans', 'textanim', 'textexit', 'layout', 'fontset', 'deco', 'backdrop', 'splash', 'reflect', 'endstyle', 'wrapper', 'sfx', 'syncmode', 'syncoff', 'camera', 'cameraSpeed', 'camexit'].forEach(id => {
+['script', 'wpm', 'autofill', 'outro', 'theme', 'handle', 'handleIcon', 'picstyle', 'picpos', 'entrance', 'trans', 'textanim', 'textexit', 'layout', 'fontset', 'deco', 'backdrop', 'splash', 'reflect', 'endstyle', 'wrapper', 'sfx', 'syncmode', 'syncoff', 'camera', 'cameraSpeed', 'camexit', 'motionPreset'].forEach(id => {
   $(id).addEventListener('input', refresh); $(id).addEventListener('change', refresh);
 });
 $('aspect').addEventListener('change', () => { applyAspect(); refresh(); });
