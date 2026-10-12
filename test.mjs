@@ -2,6 +2,8 @@ import { cameraState, CAMERAS } from './camera.js';
 import { analyzeVoice, applyVoiceSync } from './sync.js';
 import {parseScript,buildTimeline} from './engine.js';
 import { W, H, setCanvasDimensions } from './util.js';
+import { ARCHIVE_ENTRANCES, entranceParams } from './pictures.js';
+import { TRANSITIONS } from './fx.js';
 import assert from 'node:assert';
 const imgs=[{name:'soldier'},{name:'walter, heisenberg'},{name:'Galaxy Planet'},{name:'unused'}];
 const p=parseScript("Getting good at *editing* [3] isn't easy.\n\nThe strongest soldier fights.\n\nHeisenberg [1] knocks.");
@@ -82,4 +84,29 @@ setCanvasDimensions('square');
 assert.equal(W, 1080); assert.equal(H, 1080);
 setCanvasDimensions('portrait'); // restore the default for any later tests
 assert.equal(W, 1080); assert.equal(H, 1920);
+// Archival documentary entrances and transitions stay available and numerically stable.
+assert.deepEqual(ARCHIVE_ENTRANCES, ['settle', 'longrise', 'focus', 'drift', 'zoom', 'rise']);
+for (const kind of ARCHIVE_ENTRANCES) {
+  for (const p of [0, 0.25, 0.5, 0.75, 1]) {
+    const params = entranceParams(kind, p, p * 2);
+    for (const key of ['pop', 'alpha', 'rot', 'kb', 'dx', 'dy', 'sm', 'sx', 'blur']) {
+      assert(Number.isFinite(params[key]), kind + ' ' + key + ' must be finite at p=' + p);
+    }
+    assert(params.alpha >= 0 && params.alpha <= 1, kind + ' alpha stays in range');
+    assert(params.sm > 0 && params.sx > 0, kind + ' scale stays positive');
+  }
+}
+assert(TRANSITIONS.includes('pageTurn'));
+assert(TRANSITIONS.includes('newspaper'));
+assert(TRANSITIONS.includes('archiveZoom'));
+assert(TRANSITIONS.includes('filmBurn'));
+assert(TRANSITIONS.includes('paperTear'));
+// A dated history script keeps each explicitly tagged archival picture tied to its scene.
+{
+  const history = parseScript('[war-photo] In 1914 the war begins.\n\n[peace-photo] In 1918 the war ends.');
+  const historyTl = buildTimeline(history, [{ name: 'war-photo' }, { name: 'peace-photo' }], {});
+  assert.deepEqual(historyTl.events.map(e => [e.scene, e.img.name]), [[0, 'war-photo'], [1, 'peace-photo']]);
+  assert.deepEqual(historyTl.scenes.map(scene => scene.words.find(w => /\\d{3,4}/.test(w.text))?.text), ['1914', '1918']);
+}
+console.log('archival motion, transitions, year tokens and image-to-scene matching ok');
 console.log('engine and canvas formats ok');
