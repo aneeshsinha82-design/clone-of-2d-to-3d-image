@@ -2,6 +2,10 @@
 
 Browser tool that turns a **text script + named pictures** into motion-graphics videos in Shorts/Reels (9:16), landscape (16:9), or square (1:1) formats. Export MP4 (H.264/AAC) or WebM at HD / Full HD / 2K resolutions. Encoding runs in the browser; MP4/WebM export loads the open-source Mediabunny encoder from a CDN on first use.
 
+## Standalone motion graphics
+
+The **Cinematic Push** option is a separate finishing pass, independent of camera movement, scene transitions, picture entrances, typography, and quick style presets. It adds a smooth forward push, subtle edge vignette, and a brief diagonal light sweep. It is rendered through the same canvas frame path used by preview and video export. Choose **Off** to preserve the original rendering.
+
 ## How to use
 1. Write the script. A blank line (or `---`) starts a new scene.
 2. Add pictures (any number; PNG with transparent background looks best). Rename each one: the name is what the tool matches against the script.
