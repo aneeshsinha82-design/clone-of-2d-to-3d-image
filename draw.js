@@ -1,6 +1,6 @@
 import { W, H, clamp01, easeOutCubic } from './util.js';
 import { THEMES, ALTERNATE } from './themes.js';
-import { ENTRANCES, entranceParams, drawPicture } from './pictures.js';
+import { ENTRANCES, ARCHIVE_ENTRANCES, entranceParams, drawPicture } from './pictures.js';
 import { TRANSITIONS, TRANS_LEN, cameraPre, drawTransition, drawDeco, drawGhost, drawGiant, drawInk, drawBackdrop } from './fx.js';
 import { CAMERAS, EXITS, cameraFor, exitFor, cameraState, applyCamera } from './camera.js';
 import { drawText, TEXT_ANIMS, LAYOUTS } from './text.js';
@@ -82,7 +82,7 @@ function drawScene(ctx, t, S, tl, o) {
       const pcx = o.picPos === 'alt' ? ((ai - 1) % 2 ? 1 : -1) * 130 : 0;
       drawPicture(ctx, tl.events[ai - 1].img, 720, { pop: 1, alpha: 1 - age / 0.25, rot: 0, kb: 1, dx: 0, dy: 0, sm: 1, sx: 1, blur: 0, pivot: false }, o.picStyle, pcx);
     }
-    const kind = !o.entrance || o.entrance === 'mix' ? ENTRANCES[ai % ENTRANCES.length] : o.entrance;
+    const kind = o.entrance === 'archiveMix' ? ARCHIVE_ENTRANCES[ai % ARCHIVE_ENTRANCES.length] : (!o.entrance || o.entrance === 'mix' ? ENTRANCES[ai % ENTRANCES.length] : o.entrance);
     drawPicture(ctx, ev.img, 720, entranceParams(kind, p, age), o.picStyle, cxOff);
   } else if (o.backdrop && o.backdrop !== 'auto' && o.backdrop !== 'none' && sc) {
     drawBackdrop(ctx, th, o.backdrop, 330, 720, t - sc.start);
