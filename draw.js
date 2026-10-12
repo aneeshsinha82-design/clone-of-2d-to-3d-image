@@ -46,17 +46,27 @@ function sceneIndex(tl, t) {
 const themeFor = (o, si) => (o.theme === 'alternate' ? THEMES[ALTERNATE[Math.max(si, 0) % 2]] : (THEMES[o.theme] || THEMES.editorial));
 const ARCHIVE_TRANSITIONS = ['pageTurn', 'newspaper', 'archiveZoom', 'filmBurn', 'paperTear', 'zoom', 'blurin', 'wipe', 'flash'];
 
+// Pair each camera's dominant movement with a transition that reinforces the same visual direction.
+export function linkedTransitionFor(camera) {
+  return ({
+    riseup: 'bands', settle: 'iris', slidein: 'wipe', pushin: 'zoom', pullout: 'archiveZoom',
+    panleft: 'wipe', panright: 'diagonal', handheld: 'glitch', orbit: 'iris'
+  })[camera] || 'none';
+}
+
 function drawScene(ctx, t, S, tl, o) {
   ctx.setTransform(S, 0, 0, S, 0, 0);
   ctx.globalAlpha = 1; ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; ctx.filter = 'none'; ctx.setLineDash([]);
   const si = sceneIndex(tl, t), sc = si >= 0 ? tl.scenes[si] : null, th = themeFor(o, si);
-  const tkind = sc && si > 0 && o.trans && o.trans !== 'none' ? (o.trans === 'archiveMix' ? ARCHIVE_TRANSITIONS[(si - 1) % ARCHIVE_TRANSITIONS.length] : o.trans === 'mix' ? TRANSITIONS[(si - 1) % TRANSITIONS.length] : o.trans) : 'none';
+  const sceneCamera = sc ? cameraFor(o.camera, si) : 'off';
+  const linkedKind = o.linkMotionTransition && sceneCamera !== 'off' ? linkedTransitionFor(sceneCamera) : null;
+  const tkind = sc && si > 0 ? (linkedKind || (o.trans && o.trans !== 'none' ? (o.trans === 'archiveMix' ? ARCHIVE_TRANSITIONS[(si - 1) % ARCHIVE_TRANSITIONS.length] : o.trans === 'mix' ? TRANSITIONS[(si - 1) % TRANSITIONS.length] : o.trans) : 'none')) : 'none';
   const tq = sc ? (t - sc.start) / TRANS_LEN : 1;
 
   ctx.save();
   if (tq >= 0 && tq < 1) cameraPre(ctx, tkind, tq);
   if (sc) {   // camera movement + scene exit (measured from the reference video)
-    const ck = cameraFor(o.camera, si), xk = si < tl.scenes.length - 1 ? exitFor(o.camexit, si) : 'none';
+    const ck = sceneCamera, xk = si < tl.scenes.length - 1 ? exitFor(o.camexit, si) : 'none';
     if (ck !== 'off' || xk !== 'none') {
       const speed = Number.isFinite(o.cameraSpeed) ? Math.max(0.5, Math.min(2, o.cameraSpeed)) : 1;
       applyCamera(ctx, cameraState(ck, xk, (t - sc.start) * speed, (sc.end - t) * speed));
