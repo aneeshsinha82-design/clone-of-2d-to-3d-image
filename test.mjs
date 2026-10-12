@@ -102,11 +102,9 @@ assert(TRANSITIONS.includes('newspaper'));
 assert(TRANSITIONS.includes('archiveZoom'));
 assert(TRANSITIONS.includes('filmBurn'));
 assert(TRANSITIONS.includes('paperTear'));
-assert.equal(linkedTransitionFor('pushin'), 'matchZoom');
-assert.equal(linkedTransitionFor('pullout'), 'matchPullout');
-assert.equal(linkedTransitionFor('panright'), 'matchPanRight');
-assert.equal(linkedTransitionFor('riseup'), 'matchBands');
-assert.equal(linkedTransitionFor('orbit'), 'matchIris');
+assert.equal(linkedTransitionFor('pushin'), 'zoom');
+assert.equal(linkedTransitionFor('panright'), 'diagonal');
+assert.equal(linkedTransitionFor('riseup'), 'bands');
 assert.equal(linkedTransitionFor('off'), 'none');
 // A dated history script keeps each explicitly tagged archival picture tied to its scene.
 {

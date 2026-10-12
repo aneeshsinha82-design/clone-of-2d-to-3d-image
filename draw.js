@@ -49,88 +49,9 @@ const ARCHIVE_TRANSITIONS = ['pageTurn', 'newspaper', 'archiveZoom', 'filmBurn',
 // Pair each camera's dominant movement with a transition that reinforces the same visual direction.
 export function linkedTransitionFor(camera) {
   return ({
-    riseup: 'matchBands', settle: 'matchIris', slidein: 'matchPanLeft', pushin: 'matchZoom', pullout: 'matchPullout',
-    panleft: 'matchPanLeft', panright: 'matchPanRight', handheld: 'matchGlitch', orbit: 'matchIris'
+    riseup: 'bands', settle: 'iris', slidein: 'wipe', pushin: 'zoom', pullout: 'archiveZoom',
+    panleft: 'wipe', panright: 'diagonal', handheld: 'glitch', orbit: 'iris'
   })[camera] || 'none';
-}
-
-
-let linkedBuffers = null;
-function getLinkedBuffers(ctx) {
-  const source = ctx.canvas;
-  const doc = source.ownerDocument || (typeof document !== 'undefined' ? document : null);
-  if (!doc) return null;
-  if (!linkedBuffers || linkedBuffers.a.width !== source.width || linkedBuffers.a.height !== source.height) {
-    const a = doc.createElement('canvas'), b = doc.createElement('canvas');
-    a.width = b.width = source.width; a.height = b.height = source.height;
-    linkedBuffers = { a, b, ac: a.getContext('2d'), bc: b.getContext('2d') };
-  }
-  return linkedBuffers;
-}
-const easeLink = p => { p = Math.max(0, Math.min(1, p)); return p * p * (3 - 2 * p); };
-function paintScaled(ctx, image, scale, focusX, focusY, alpha = 1) {
-  const cw = ctx.canvas.width, ch = ctx.canvas.height;
-  ctx.save(); ctx.globalAlpha = alpha;
-  ctx.translate(focusX, focusY); ctx.scale(scale, scale); ctx.translate(-focusX, -focusY);
-  ctx.drawImage(image, 0, 0, cw, ch); ctx.restore();
-}
-function drawLinkedTransition(ctx, t, S, tl, o, si) {
-  const buffers = getLinkedBuffers(ctx);
-  if (!buffers) { drawScene(ctx, t, S, tl, { ...o, linkMotionTransition: false, trans: 'none' }); return; }
-  const sc = tl.scenes[si], prev = tl.scenes[si - 1];
-  const q = easeLink((t - sc.start) / TRANS_LEN);
-  const plainOpts = { ...o, linkMotionTransition: false, trans: 'none' };
-  drawScene(buffers.ac, Math.max(prev.start, prev.end - 0.001), S, tl, plainOpts);
-  drawScene(buffers.bc, t, S, tl, plainOpts);
-  const cw = ctx.canvas.width, ch = ctx.canvas.height;
-  const fx = cw * 0.5, fy = Math.min(ch * 0.48, 720 * S);
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.globalAlpha = 1; ctx.filter = 'none'; ctx.clearRect(0, 0, cw, ch);
-  const kind = linkedTransitionFor(cameraFor(o.camera, si));
-  if (kind === 'matchZoom') {
-    paintScaled(ctx, buffers.a, 1 + 0.42 * q, fx, fy, 1);
-    const blend = easeLink(Math.max(0, (q - 0.16) / 0.84));
-    paintScaled(ctx, buffers.b, 1.42 - 0.42 * q, fx, fy, blend);
-  } else if (kind === 'matchPullout') {
-    paintScaled(ctx, buffers.a, 1 - 0.20 * q, fx, fy, 1);
-    const blend = easeLink(Math.max(0, (q - 0.12) / 0.88));
-    paintScaled(ctx, buffers.b, 0.80 + 0.20 * q, fx, fy, blend);
-  } else if (kind === 'matchPanLeft' || kind === 'matchPanRight') {
-    const dir = kind === 'matchPanLeft' ? -1 : 1;
-    ctx.drawImage(buffers.a, -dir * cw * q, 0, cw, ch);
-    ctx.drawImage(buffers.b, dir * cw * (1 - q), 0, cw, ch);
-    ctx.globalAlpha = 0.12 * Math.sin(Math.PI * q);
-    const grad = ctx.createLinearGradient(0, 0, cw, 0);
-    grad.addColorStop(0, 'rgba(0,0,0,0)'); grad.addColorStop(1, 'rgba(0,0,0,0.65)');
-    ctx.fillStyle = grad; ctx.fillRect(0, 0, cw, ch); ctx.globalAlpha = 1;
-  } else if (kind === 'matchBands') {
-    ctx.drawImage(buffers.a, 0, 0);
-    const n = 8, bandH = ch / n;
-    for (let i = 0; i < n; i++) {
-      const delay = Math.abs(i - (n - 1) / 2) / n * 0.22;
-      const p = easeLink((q - delay) / Math.max(0.01, 1 - delay));
-      ctx.save(); ctx.beginPath(); ctx.rect(0, i * bandH, cw * p, bandH + 1); ctx.clip();
-      ctx.drawImage(buffers.b, 0, 0); ctx.restore();
-    }
-  } else if (kind === 'matchIris') {
-    ctx.drawImage(buffers.a, 0, 0);
-    ctx.save(); ctx.beginPath(); ctx.arc(fx, fy, Math.hypot(cw, ch) * q, 0, Math.PI * 2); ctx.clip();
-    ctx.drawImage(buffers.b, 0, 0); ctx.restore();
-  } else if (kind === 'matchGlitch') {
-    const blend = easeLink((q - 0.08) / 0.92);
-    ctx.drawImage(buffers.a, 0, 0);
-    ctx.globalAlpha = blend;
-    ctx.drawImage(buffers.b, -(1 - q) * cw * 0.012, 0, cw, ch);
-    ctx.globalAlpha = 1;
-    if (q < 0.72) {
-      ctx.globalAlpha = (1 - q) * 0.22; ctx.fillStyle = '#e8f4ff';
-      for (let i = 0; i < 5; i++) ctx.fillRect(0, ((i * 0.173 + q * 0.71) % 1) * ch, cw, Math.max(1, ch * 0.006));
-    }
-    ctx.globalAlpha = 1;
-  } else {
-    ctx.drawImage(buffers.a, 0, 0); ctx.globalAlpha = q; ctx.drawImage(buffers.b, 0, 0); ctx.globalAlpha = 1;
-  }
-  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.filter = 'none';
 }
 
 function drawScene(ctx, t, S, tl, o) {
@@ -208,11 +129,6 @@ function renderDesign(ctx, t, S, tl, o) {
       ctx.setTransform(S, 0, 0, S, 0, 0); ctx.filter = 'none';
       drawOutro(ctx, themeFor(o, tl.scenes.length - 1), t - tl.outroStart, o.handle);
     }
-    return;
-  }
-  const si = sceneIndex(tl, t), sc = si >= 0 ? tl.scenes[si] : null;
-  if (o.linkMotionTransition && sc && si > 0 && linkedTransitionFor(cameraFor(o.camera, si)) !== 'none' && t >= sc.start && t < sc.start + TRANS_LEN) {
-    drawLinkedTransition(ctx, t, S, tl, o, si);
     return;
   }
   drawScene(ctx, t, S, tl, o);
