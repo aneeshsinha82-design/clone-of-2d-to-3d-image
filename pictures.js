@@ -32,7 +32,7 @@ export function entranceParams(kind, p, age) {
 }
 
 export function drawPicture(ctx, im, cy, a, style, cx = 0) {
-  const nw = im.el.naturalWidth, nh = im.el.naturalHeight;
+  const nw = im.el.naturalWidth || im.el.videoWidth, nh = im.el.naturalHeight || im.el.videoHeight;
   const s = Math.min(820 / nw, 940 / nh) * (0.8 + 0.2 * a.pop) * a.kb * a.sm;
   const w = nw * s, h = nh * s;
   ctx.save();
