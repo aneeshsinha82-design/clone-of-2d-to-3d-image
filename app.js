@@ -1,6 +1,6 @@
 import { parseScript, buildTimeline } from './engine.js';
 import { analyzeVoice, applyVoiceSync } from './sync.js';
-import { renderFrame, W, H } from './draw.js';
+import { renderFrame, syncMediaForExport, W, H } from './draw.js';
 import { setCanvasDimensions } from './util.js';
 import { initTimeline, drawTimeline, drawTimelineOverlay, timelineDuration, timelineEnabled } from './timeline.js';
 
@@ -112,11 +112,26 @@ $('imgs').onchange = async e => {
   e.target.value = ''; renderList(); refresh();
   $('imgmsg').textContent = skipped.length ? `Could not read ${skipped.length} file(s): ${skipped.join(', ')}. Use JPG, PNG or WebP (iPhone HEIC photos are not supported — convert them first).` : '';
 };
+// Video uploads join the same ordered, tag-matchable media list as pictures.
+$('vids').onchange = async e => {
+  const skipped = [];
+  for (const f of e.target.files) {
+    const url = URL.createObjectURL(f), el = document.createElement('video');
+    el.src = url; el.muted = true; el.playsInline = true; el.preload = 'metadata';
+    try {
+      await new Promise((resolve, reject) => { el.onloadedmetadata = resolve; el.onerror = reject; });
+      if (!Number.isFinite(el.duration) || el.duration <= 0) throw new Error('Invalid video');
+      state.images.push({ id: state.nextId++, name: f.name.replace(/\\.[^.]+$/, ''), el, url, kind: 'video', duration: el.duration });
+    } catch { skipped.push(f.name); URL.revokeObjectURL(url); }
+  }
+  e.target.value = ''; renderList(); refresh();
+  $('vidmsg').textContent = skipped.length ? 'Could not read: ' + skipped.join(', ') + '. Try MP4 (H.264) or WebM.' : '';
+};
 function renderList() {
   const box = $('imglist'); box.innerHTML = '';
   state.images.forEach((im, i) => {
     const d = document.createElement('div'); d.className = 'card';
-    d.innerHTML = `<img src="${im.url}"><div><div class="num">#${i + 1}</div><input value="${esc(im.name)}" placeholder="name / trigger words"><div class="row"></div></div><div></div>`;
+    d.innerHTML = `<div class="media-thumb">${im.kind === "video" ? '<video muted playsinline></video>' : '<img>'}</div><div><div class="num">#${i + 1} · ${im.kind === "video" ? "VIDEO" : "IMAGE"}</div><input value="${esc(im.name)}" placeholder="name / trigger words"><div class="row"></div></div><div></div>`; d.querySelector("video, img").src = im.url;
     d.querySelector('input').oninput = e => { im.name = e.target.value; refresh(); };
     const row = d.querySelector('.row');
     const mk = (t, fn) => { const b = document.createElement('button'); b.textContent = t; b.onclick = fn; row.appendChild(b); };
@@ -272,6 +287,22 @@ function updateTime() {
   $('time').textContent = `${fmt(curT)} / ${fmt(tot)}`;
   $('seek').value = tot ? curT / tot * 1000 : 0;
 }
+let activeVideoEvent = null;
+function syncPreviewVideos(t) {
+  const events = state.tl?.events || [];
+  let active = null;
+  for (const event of events) if (event.t <= t) active = event; else break;
+  if (active?.img?.kind !== 'video') active = null;
+  if (activeVideoEvent !== active) {
+    events.forEach(event => { if (event.img.kind === 'video') event.img.el.pause(); });
+    activeVideoEvent = active;
+    if (active) { try { active.img.el.currentTime = Math.min(Math.max(0, t - active.t), Math.max(0, active.img.el.duration - 0.05)); } catch {} active.img.el.play().catch(() => {}); }
+  } else if (active) {
+    const v = active.img.el, wanted = Math.min(Math.max(0, t - active.t), Math.max(0, v.duration - 0.05));
+    if (Math.abs(v.currentTime - wanted) > 0.6) { try { v.currentTime = wanted; } catch {} }
+  }
+}
+function stopPreviewVideos() { (state.tl?.events || []).forEach(event => { if (event.img.kind === 'video') event.img.el.pause(); }); activeVideoEvent = null; }
 function play() {
   if (exporting || tap || !state.tl.total) return;
   if (curT >= state.tl.total - 0.05) curT = 0;
@@ -284,13 +315,14 @@ function play() {
   const loop = () => {
     if (!playing) return;
     curT = (performance.now() - base) / 1000;
+    syncPreviewVideos(curT);
     if (curT >= state.tl.total) { curT = state.tl.total; pause(); }
     draw(curT, cv.width / W); updateTime();
     if (playing) raf = requestAnimationFrame(loop);
   };
   raf = requestAnimationFrame(loop);
 }
-function pause() { playing = false; cancelAnimationFrame(raf); stopAudio(); $('play').textContent = '▶ Play'; }
+function pause() { playing = false; cancelAnimationFrame(raf); stopAudio(); stopPreviewVideos(); $('play').textContent = '▶ Play'; }
 $('play').onclick = () => playing ? pause() : play();
 $('seek').oninput = e => {
   const was = playing; if (was) pause();
@@ -389,6 +421,7 @@ $('export').onclick = async () => {
     const frameDuration = 1 / fps;
     for (let i = 0; i < frameCount; i++) {
       const t = i / fps;
+      await syncMediaForExport(t, state.tl);
       draw(t, S);
       await videoSource.add(t, Math.min(frameDuration, total - t));
       if (i % Math.max(1, Math.floor(fps / 2)) === 0 || i === frameCount - 1) {
