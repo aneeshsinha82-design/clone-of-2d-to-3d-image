@@ -189,6 +189,27 @@ function drawCinematicPush(ctx, t, tl, S) {
   return true;
 }
 
+// Seek uploaded clips deterministically before each exported canvas frame.
+export async function syncMediaForExport(t, tl) {
+  const events = tl?.events || [];
+  let active = null;
+  for (const event of events) if (event.t <= t) active = event; else break;
+  const videos = events.filter(event => event.img?.kind === 'video');
+  for (const event of videos) {
+    const video = event.img.el;
+    video.pause();
+    if (event !== active) continue;
+    const target = Math.min(Math.max(0, t - event.t), Math.max(0, video.duration - 0.04));
+    if (Math.abs(video.currentTime - target) > 0.025) {
+      await new Promise(resolve => {
+        const done = () => { video.removeEventListener('seeked', done); video.removeEventListener('error', done); resolve(); };
+        video.addEventListener('seeked', done, { once: true }); video.addEventListener('error', done, { once: true });
+        try { video.currentTime = target; } catch { done(); }
+      });
+    }
+  }
+}
+
 export function renderFrame(ctx, t, S, tl, o) {
   if (o.motionPreset !== 'cinematicPush') {
     if (o.wrapper) renderShowcase(ctx, t, S, tl, (g, s) => renderDesign(g, t, s, tl, o));
