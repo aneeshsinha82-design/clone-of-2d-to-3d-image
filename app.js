@@ -121,7 +121,7 @@ $('vids').onchange = async e => {
     try {
       await new Promise((resolve, reject) => { el.onloadedmetadata = resolve; el.onerror = reject; });
       if (!Number.isFinite(el.duration) || el.duration <= 0) throw new Error('Invalid video');
-      state.images.push({ id: state.nextId++, name: f.name.replace(/\\.[^.]+$/, ''), el, url, kind: 'video', duration: el.duration });
+      state.images.push({ id: state.nextId++, name: f.name.replace(/\.[^.]+$/, ''), el, url, kind: 'video', duration: el.duration });
     } catch { skipped.push(f.name); URL.revokeObjectURL(url); }
   }
   e.target.value = ''; renderList(); refresh();
