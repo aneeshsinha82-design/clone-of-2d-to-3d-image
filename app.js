@@ -186,6 +186,24 @@ function enforceTimelineDurations(tl) {
     if (tl.outroStart !== undefined) tl.outroStart += delta;
   });
 }
+// Voice sync can recalculate the timeline after buildTimeline has extended it.
+function enforceVideoDurations(tl) {
+  if (!tl?.scenes?.length) return;
+  const videoEnd = (tl.events || []).reduce((end, event) => {
+    const duration = event.img?.kind === 'video' ? Number(event.img.duration) : 0;
+    return duration > 0 ? Math.max(end, event.t + duration) : end;
+  }, 0);
+  if (videoEnd <= 0) return;
+  const outroLen = tl.hasOutro ? Math.max(0, tl.total - tl.outroStart) : 0;
+  const currentContentEnd = tl.hasOutro ? tl.outroStart : tl.total;
+  if (videoEnd <= currentContentEnd) return;
+  const lastScene = tl.scenes[tl.scenes.length - 1];
+  lastScene.end = videoEnd;
+  if (lastScene.phrases?.length) lastScene.phrases[lastScene.phrases.length - 1].end = videoEnd;
+  tl.outroStart = videoEnd;
+  tl.total = videoEnd + outroLen;
+}
+
 function refresh() {
   $('wpmv').textContent = $('wpm').value + ' wpm';
   $('cameraSpeedValue').textContent = (+$('cameraSpeed').value / 100).toFixed(1) + '×';
@@ -199,6 +217,7 @@ function refresh() {
     if (!ok) state.tl = buildTimeline(parseScript($('script').value), state.images, { ...bo, audioDur: aDur, timelineDuration: timelineEnabled() ? timelineDuration() : 4 });
   }
   enforceTimelineDurations(state.tl);
+  enforceVideoDurations(state.tl);
   curT = Math.min(curT, state.tl.total);
   const tl = $('tl'); tl.innerHTML = '';
   state.tl.scenes.forEach((sc, i) => {
