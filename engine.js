@@ -161,6 +161,18 @@ export function buildTimeline(parsed, images, o = {}) {
     events.forEach(e => e.t *= f);
     total = o.audioDur;
   }
+  // A matched video must be allowed to finish even when the script or voice-over
+  // ends first. Video duration is measured in real seconds, independent of voice sync.
+  const videoEnd = events.reduce((end, event) => {
+    const duration = event.img?.kind === 'video' ? Number(event.img.duration) : 0;
+    return duration > 0 ? Math.max(end, event.t + duration) : end;
+  }, 0);
+  if (videoEnd > total && scenes.length) {
+    total = videoEnd;
+    const lastScene = scenes[scenes.length - 1];
+    lastScene.end = total;
+    if (lastScene.phrases.length) lastScene.phrases[lastScene.phrases.length - 1].end = total;
+  }
   const outroStart = total;
   return { scenes, events, total: total + outroLen, outroStart, hasOutro: outroLen > 0 };
 }
