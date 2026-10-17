@@ -59,12 +59,16 @@ export function parseScript(src) {
   }).filter(s => s.words.length);
 }
 
+const mediaName = name => (name || '').replace(/\.(?:png|jpe?g|webp|gif|mp4|webm|mov|ogg|m4v)$/i, '');
+
 export function findByTag(tag, images) {
   if (/^\d+$/.test(tag)) return images[+tag - 1] || null;
-  const tk = tag.split(/[\s_-]+/).map(norm).filter(Boolean).join(' ');
+  const cleanTag = mediaName(tag);
+  const tk = cleanTag.split(/[\s_-]+/).map(norm).filter(Boolean).join(' ');
   for (const im of images) {
-    if (norm(im.name) === norm(tag)) return im;
-    if (imageKeys(im.name).some(k => k.join(' ') === tk)) return im;
+    const cleanName = mediaName(im.name);
+    if (norm(cleanName) === norm(cleanTag)) return im;
+    if (imageKeys(cleanName).some(k => k.join(' ') === tk)) return im;
   }
   return null;
 }
